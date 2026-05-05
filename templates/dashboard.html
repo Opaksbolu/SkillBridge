@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+<h1>Welcome, {{ user[0] }} 🎉</h1>
+
+<p><strong>Style:</strong> {{ user[1] }}</p>
+<p><strong>Language:</strong> {{ user[2] }}</p>
+<p><strong>Grade:</strong> {{ user[3] }}</p>
+<p><strong>Subjects:</strong></p>
+
+<ul>
+{% for subject in user[4].split(', ') %}
+    <li>
+        <a href="/learn/{{ subject }}">{{ subject }}</a>
+    </li>
+{% endfor %}
+</ul>
+
+<a href="/logout">Logout</a>
+
+</div>
+
+</body>
+</html>

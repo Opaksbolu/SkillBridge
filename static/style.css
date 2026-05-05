@@ -1,0 +1,58 @@
+body {
+    font-family: Arial;
+    background: linear-gradient(to right, #3f82f2, #6fa3ff);
+}
+
+.container {
+    width: 400px;
+    margin: 80px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+button {
+    background: #3f82f2;
+    color: white;
+    border: none;
+}
+
+a {
+    text-decoration: none;
+    color: #3f82f2;
+}
+
+.back-btn {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.lesson-box {
+    background: #f9f9f9;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    margin: 8px 0;
+}
+
+li a {
+    display: block;
+    padding: 10px;
+    background: #eef3ff;
+    border-radius: 6px;
+}
