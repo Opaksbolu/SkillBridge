@@ -1,45 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Dashboard</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
+    <div class="container">
+        <h1>Welcome, {{ user[1] }} 👋</h1>
 
-<div class="container">
+        <div class="card">
+            <h2>Your Subjects</h2>
+            <div class="subject-grid">
+                {% for subject in user[5].split(',') %}
+                    <a href="/learn/{{ subject }}">{{ subject }}</a>
+                {% endfor %}
+            </div>
+        </div>
 
-<h1>{{ text.welcome }}, {{ user[1] }} 👋</h1>
+        <div class="card">
+            <h2>🤖 Recommended</h2>
+            <p>{{ recommendation }}</p>
+        </div>
 
-<!-- SUBJECTS -->
-<div class="card">
-<h3>{{ text.subjects }}</h3>
-
-<div class="subject-grid">
-{% for subject in subjects %}
-<a href="/learn/{{ subject.original }}">
-    <div class="subject-card">
-        {{ subject.translated }}
+        <br>
+        <a href="/subjects">🔁 Change Subjects</a>
+        <a href="/register">🌍 Change Language</a>
+        <a href="/logout">Logout</a>
     </div>
-</a>
-{% endfor %}
-</div>
-
-</div>
-
-<!-- RECOMMENDATIONS -->
-<div class="card">
-<h3>{{ text.recommended }} 🤖</h3>
-
-{% for rec in recommendations %}
-<div class="recommendation">{{ rec }}</div>
-{% endfor %}
-
-</div>
-
-<a href="/logout" class="logout">{{ text.logout }}</a>
-
-</div>
-
 </body>
 </html>

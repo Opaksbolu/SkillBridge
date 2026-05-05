@@ -1,173 +1,152 @@
 from flask import Flask, render_template, request, redirect, session
 import sqlite3
+import os
+from openai import OpenAI
 
 app = Flask(__name__)
-app.secret_key = "secret"
+app.secret_key = "secret123"
 
-# 🌍 TRANSLATIONS
-translations = {
-    "English": {
-        "welcome": "Welcome",
-        "subjects": "Your Subjects",
-        "recommended": "Recommended For You",
-        "logout": "Logout"
-    },
-    "Spanish": {
-        "welcome": "Bienvenido",
-        "subjects": "Tus Materias",
-        "recommended": "Recomendado Para Ti",
-        "logout": "Cerrar sesión"
-    }
-}
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 🌍 SUBJECT TRANSLATIONS
-subject_translations = {
-    "English": {
-        "Math": "Math",
-        "Science": "Science",
-        "English": "English",
-        "History": "History",
-        "Computer Science": "Computer Science"
-    },
-    "Spanish": {
-        "Math": "Matemáticas",
-        "Science": "Ciencia",
-        "English": "Inglés",
-        "History": "Historia",
-        "Computer Science": "Informática"
-    }
-}
-
-# 📚 COURSES
-courses = {
-    "Math": [
-        {"title": "Lesson 1: Numbers", "content": "Learn basic numbers and counting."},
-        {"title": "Lesson 2: Addition", "content": "Learn how to add numbers."}
-    ],
-    "Science": [
-        {"title": "Lesson 1: Plants", "content": "Learn about plants."}
-    ],
-    "English": [
-        {"title": "Lesson 1: Alphabet", "content": "Learn A-Z letters."}
-    ],
-    "History": [
-        {"title": "Lesson 1: Ancient World", "content": "Introduction to history."}
-    ],
-    "Computer Science": [
-        {"title": "Lesson 1: Coding", "content": "Introduction to coding."}
-    ]
-}
-
-# DB INIT
-def init_db():
-    conn = sqlite3.connect("users.db")
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (id INTEGER PRIMARY KEY, name TEXT, email TEXT, password TEXT, language TEXT, subjects TEXT)''')
-    conn.commit()
-    conn.close()
-
-init_db()
-
+# ---------------- HOME ----------------
 @app.route('/')
 def home():
-    return render_template("index.html")
+    return render_template('index.html')
 
-@app.route('/register', methods=["GET", "POST"])
+# ---------------- REGISTER ----------------
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == "POST":
-        name = request.form["name"]
-        email = request.form["email"]
-        password = request.form["password"]
-        language = request.form["language"]
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        language = request.form['language']
+        learning_style = request.form['learning_style']
+        grade_level = request.form['grade_level']
 
-        conn = sqlite3.connect("users.db")
+        conn = sqlite3.connect('users.db')
         c = conn.cursor()
-        c.execute("INSERT INTO users (name,email,password,language,subjects) VALUES (?,?,?,?,?)",
-                  (name, email, password, language, ""))
+
+        c.execute("""INSERT INTO users 
+        (name, email, password, language, learning_style, grade_level)
+        VALUES (?, ?, ?, ?, ?, ?)""",
+                  (name, email, password, language, learning_style, grade_level))
+
         conn.commit()
         conn.close()
 
-        return redirect("/login")
+        return redirect('/login')
 
-    return render_template("register.html")
+    return render_template('register.html')
 
-@app.route('/login', methods=["GET", "POST"])
+# ---------------- LOGIN ----------------
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
 
-        conn = sqlite3.connect("users.db")
+        conn = sqlite3.connect('users.db')
         c = conn.cursor()
+
         c.execute("SELECT * FROM users WHERE email=? AND password=?", (email, password))
         user = c.fetchone()
+
         conn.close()
 
         if user:
-            session["user_id"] = user[0]
-            return redirect("/subjects")
+            session['user_id'] = user[0]
+            return redirect('/subjects')
 
-    return render_template("login.html")
+    return render_template('login.html')
 
-@app.route('/subjects', methods=["GET", "POST"])
+# ---------------- SUBJECTS ----------------
+@app.route('/subjects', methods=['GET', 'POST'])
 def subjects():
-    if "user_id" not in session:
-        return redirect("/login")
+    if 'user_id' not in session:
+        return redirect('/login')
 
-    if request.method == "POST":
-        selected = request.form.getlist("subjects")
-        selected_str = ", ".join(selected)
+    subject_list = [
+        "Math", "Science", "English", "History",
+        "Computer Science", "Biology", "Chemistry",
+        "Physics", "Economics", "Art", "Music"
+    ]
 
-        conn = sqlite3.connect("users.db")
+    if request.method == 'POST':
+        selected = request.form.getlist('subjects')
+        subjects_str = ",".join(selected)
+
+        conn = sqlite3.connect('users.db')
         c = conn.cursor()
-        c.execute("UPDATE users SET subjects=? WHERE id=?", (selected_str, session["user_id"]))
+        c.execute("UPDATE users SET subjects=? WHERE id=?",
+                  (subjects_str, session['user_id']))
         conn.commit()
         conn.close()
 
-        return redirect("/dashboard")
+        return redirect('/dashboard')
 
-    return render_template("subjects.html")
+    return render_template('subjects.html', subjects=subject_list)
 
+# ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
-    if "user_id" not in session:
-        return redirect("/login")
+    if 'user_id' not in session:
+        return redirect('/login')
 
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE id=?", (session["user_id"],))
+    c.execute("SELECT * FROM users WHERE id=?", (session['user_id'],))
     user = c.fetchone()
     conn.close()
 
-    language = user[4]
-    text = translations.get(language, translations["English"])
-    subject_map = subject_translations.get(language, subject_translations["English"])
+    return render_template('dashboard.html', user=user)
 
-    raw_subjects = user[5].split(", ") if user[5] else []
-
-    subjects = [
-        {"original": s, "translated": subject_map.get(s, s)}
-        for s in raw_subjects
-    ]
-
-    recommendations = ["Take quizzes", "Practice daily"]
-
-    return render_template("dashboard.html",
-                           user=user,
-                           subjects=subjects,
-                           recommendations=recommendations,
-                           text=text)
-
-@app.route('/learn/<subject>')
+# ---------------- AI LEARNING PAGE ----------------
+@app.route('/learn/<subject>', methods=['GET', 'POST'])
 def learn(subject):
-    lessons = courses.get(subject, [])
-    return render_template("learn.html", subject=subject, lessons=lessons)
+    if 'user_id' not in session:
+        return redirect('/login')
 
+    response = ""
+
+    if request.method == 'POST':
+        question = request.form['question']
+
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute("SELECT language, learning_style, grade_level FROM users WHERE id=?", (session['user_id'],))
+        user = c.fetchone()
+        conn.close()
+
+        language, learning_style, grade = user
+
+        prompt = f"""
+        You are a helpful tutor.
+        
+        Teach {subject} to a {grade} student.
+        Use {learning_style} learning style.
+        Respond in {language}.
+        
+        Question: {question}
+        """
+
+        ai = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[
+                {"role": "system", "content": "You are an expert tutor."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        response = ai.choices[0].message.content
+
+    return render_template('learn.html', subject=subject, response=response)
+
+# ---------------- LOGOUT ----------------
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect("/")
+    return redirect('/')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)

@@ -1,30 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Select Subjects</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Choose Subjects</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    <div class="container">
+        <h2>Select Your Subjects</h2>
 
-<div class="container">
-<div class="card">
+        <form method="POST">
+            <div class="subject-grid">
+                {% for subject in subjects %}
+                    <label class="subject">
+                        <input type="checkbox" name="subjects" value="{{ subject }}">
+                        {{ subject }}
+                    </label>
+                {% endfor %}
+            </div>
 
-<h2>Select Your Subjects</h2>
+            <button type="submit">Continue</button>
+        </form>
 
-<form method="POST">
-
-<label><input type="checkbox" name="subjects" value="Math"> Math</label><br>
-<label><input type="checkbox" name="subjects" value="Science"> Science</label><br>
-<label><input type="checkbox" name="subjects" value="English"> English</label><br>
-<label><input type="checkbox" name="subjects" value="History"> History</label><br>
-<label><input type="checkbox" name="subjects" value="Computer Science"> Computer Science</label><br><br>
-
-<button type="submit">Continue</button>
-
-</form>
-
-</div>
-</div>
-
+        <br>
+        <a href="/register">⬅ Back</a>
+    </div>
 </body>
 </html>
