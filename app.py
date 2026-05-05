@@ -47,6 +47,7 @@ def register():
         return redirect(url_for('subjects'))
 
     return render_template('register.html')
+
 # 📚 Subjects
 @app.route('/subjects', methods=['GET', 'POST'])
 def subjects():
@@ -74,7 +75,6 @@ def subjects():
         conn.close()
 
         session.pop('temp_user', None)
-
         return redirect(url_for('login'))
 
     return render_template('subjects.html')
@@ -98,12 +98,29 @@ def login():
 
         if user:
             session['user_id'] = user[0]
-            session['language'] = user[5]   # ✅ STORE LANGUAGE IN SESSION
             return redirect(url_for('dashboard'))
         else:
             return "Invalid login"
 
     return render_template('login.html')
+
+# 🤖 AI-style Recommendation Logic
+def get_recommendations(learning_style, grade_level):
+    recommendations = []
+
+    if learning_style == "visual":
+        recommendations.append("Video-based lessons")
+    elif learning_style == "auditory":
+        recommendations.append("Audio explanations")
+    elif learning_style == "hands_on":
+        recommendations.append("Interactive exercises")
+
+    if "Grade" in grade_level:
+        recommendations.append("Practice quizzes")
+    else:
+        recommendations.append("Basic learning games")
+
+    return recommendations
 
 # 📊 Dashboard
 @app.route('/dashboard')
@@ -122,7 +139,9 @@ def dashboard():
     user = cursor.fetchone()
     conn.close()
 
-    return render_template('dashboard.html', user=user, language=session.get('language'))
+    recommendations = get_recommendations(user[1], user[3])
+
+    return render_template('dashboard.html', user=user, recommendations=recommendations)
 
 # 📚 Learning Page
 @app.route('/learn/<subject>')
@@ -130,7 +149,7 @@ def learn(subject):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    return render_template('learn.html', subject=subject, language=session.get('language'))
+    return render_template('learn.html', subject=subject)
 
 # 🚪 Logout
 @app.route('/logout')

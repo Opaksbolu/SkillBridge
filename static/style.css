@@ -1,41 +1,19 @@
 body {
     font-family: Arial;
-    background: #f4f6f8;
+    background: linear-gradient(to right, #4facfe, #00f2fe);
 }
 
 .container {
-    width: 400px;
-    margin: auto;
-    margin-top: 50px;
-    padding: 20px;
+    width: 450px;
+    margin: 60px auto;
     background: white;
-    border-radius: 10px;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
 }
 
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-}
-
-button {
-    width: 100%;
-    padding: 10px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-}
-
-.back-btn {
-    text-decoration: none;
-}
-
-.lesson-box {
-    background: #f9f9f9;
-    padding: 15px;
-    margin: 15px 0;
-    border-radius: 8px;
+h1 {
+    color: #333;
 }
 
 ul {
@@ -44,12 +22,21 @@ ul {
 }
 
 li {
-    margin: 8px 0;
+    margin: 10px 0;
 }
 
 li a {
-    display: block;
+    text-decoration: none;
+    background: #eef;
     padding: 10px;
-    background: #eef3ff;
+    display: block;
     border-radius: 6px;
+}
+
+button {
+    background: #4facfe;
+    color: white;
+    padding: 10px;
+    border: none;
+    width: 100%;
 }
