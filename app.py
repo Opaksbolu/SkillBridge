@@ -47,7 +47,6 @@ def register():
         return redirect(url_for('subjects'))
 
     return render_template('register.html')
-
 # 📚 Subjects
 @app.route('/subjects', methods=['GET', 'POST'])
 def subjects():
