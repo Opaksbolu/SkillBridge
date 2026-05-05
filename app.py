@@ -4,7 +4,35 @@ import sqlite3
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# 🔹 Initialize DB
+# 🌍 LANGUAGE DICTIONARY
+translations = {
+    "English": {
+        "welcome": "Welcome",
+        "dashboard": "Dashboard",
+        "subjects": "Your Subjects",
+        "recommended": "Recommended For You",
+        "logout": "Logout"
+    },
+    "Spanish": {
+        "welcome": "Bienvenido",
+        "dashboard": "Panel",
+        "subjects": "Tus Materias",
+        "recommended": "Recomendado Para Ti",
+        "logout": "Cerrar sesión"
+    },
+    "French": {
+        "welcome": "Bienvenue",
+        "dashboard": "Tableau de bord",
+        "subjects": "Vos matières",
+        "recommended": "Recommandé pour vous",
+        "logout": "Se déconnecter"
+    }
+}
+
+def get_text(language, key):
+    return translations.get(language, translations["English"]).get(key, key)
+
+# 🔹 DB INIT
 def init_db():
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
@@ -13,7 +41,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
-            email TEXT UNIQUE,
+            email TEXT,
             password TEXT,
             learning_style TEXT,
             language TEXT,
@@ -27,33 +55,25 @@ def init_db():
 
 init_db()
 
-# 🏠 Home
+# 🏠 HOME
 @app.route('/')
 def home():
     return render_template('index.html')
 
-# 📝 Register
+# 📝 REGISTER
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        session['temp_user'] = {
-            'name': request.form['fullname'],
-            'email': request.form['email'],
-            'password': request.form['password'],
-            'learning_style': request.form['learning_style'],
-            'language': request.form['language'],
-            'grade_level': request.form['grade_level']
-        }
+        session['temp_user'] = request.form
         return redirect(url_for('subjects'))
-
     return render_template('register.html')
 
-# 📚 Subjects
+# 📚 SUBJECTS
 @app.route('/subjects', methods=['GET', 'POST'])
 def subjects():
     if request.method == 'POST':
-        subjects = ", ".join(request.form.getlist('subjects'))
         user = session.get('temp_user')
+        subjects = ", ".join(request.form.getlist('subjects'))
 
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
@@ -62,7 +82,7 @@ def subjects():
             INSERT INTO users (name, email, password, learning_style, language, grade_level, subjects)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (
-            user['name'],
+            user['fullname'],
             user['email'],
             user['password'],
             user['learning_style'],
@@ -74,88 +94,80 @@ def subjects():
         conn.commit()
         conn.close()
 
-        session.pop('temp_user', None)
         return redirect(url_for('login'))
 
     return render_template('subjects.html')
 
-# 🔐 Login
+# 🔐 LOGIN
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
 
         cursor.execute(
             'SELECT * FROM users WHERE email=? AND password=?',
-            (email, password)
+            (request.form['email'], request.form['password'])
         )
+
         user = cursor.fetchone()
         conn.close()
 
         if user:
             session['user_id'] = user[0]
             return redirect(url_for('dashboard'))
-        else:
-            return "Invalid login"
 
     return render_template('login.html')
 
-# 🤖 AI-style Recommendation Logic
-def get_recommendations(learning_style, grade_level):
-    recommendations = []
+# 🤖 SMART RECOMMENDATIONS
+def get_recommendations(style, grade):
+    rec = []
 
-    if learning_style == "visual":
-        recommendations.append("Video-based lessons")
-    elif learning_style == "auditory":
-        recommendations.append("Audio explanations")
-    elif learning_style == "hands_on":
-        recommendations.append("Interactive exercises")
+    if style == "visual":
+        rec += ["Watch videos", "Use diagrams"]
+    elif style == "auditory":
+        rec += ["Listen to lessons", "Repeat aloud"]
+    elif style == "hands_on":
+        rec += ["Practice exercises", "Do projects"]
 
-    if "Grade" in grade_level:
-        recommendations.append("Practice quizzes")
+    if "Grade" in grade:
+        rec.append("Take quizzes")
     else:
-        recommendations.append("Basic learning games")
+        rec.append("Play learning games")
 
-    return recommendations
+    return rec
 
-# 📊 Dashboard
+# 📊 DASHBOARD
 @app.route('/dashboard')
 def dashboard():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
 
-    cursor.execute('''
-        SELECT name, learning_style, language, grade_level, subjects
-        FROM users WHERE id=?
-    ''', (session['user_id'],))
-
+    cursor.execute('SELECT * FROM users WHERE id=?', (session['user_id'],))
     user = cursor.fetchone()
     conn.close()
 
-    recommendations = get_recommendations(user[1], user[3])
+    recommendations = get_recommendations(user[4], user[6])
 
-    return render_template('dashboard.html', user=user, recommendations=recommendations)
+    text = translations.get(user[5], translations["English"])
 
-# 📚 Learning Page
+    return render_template(
+        'dashboard.html',
+        user=user,
+        recommendations=recommendations,
+        text=text
+    )
+
+# 📚 LEARN PAGE
 @app.route('/learn/<subject>')
 def learn(subject):
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
     return render_template('learn.html', subject=subject)
 
-# 🚪 Logout
+# 🚪 LOGOUT
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('home'))
+    return redirect('/')
 
 if __name__ == "__main__":
     app.run(debug=True)

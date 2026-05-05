@@ -1,19 +1,28 @@
 body {
-    font-family: Arial;
-    background: linear-gradient(to right, #4facfe, #00f2fe);
+    font-family: 'Segoe UI';
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #333;
 }
 
 .container {
-    width: 450px;
+    width: 500px;
     margin: 60px auto;
+}
+
+.card {
     background: white;
-    padding: 30px;
+    padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    margin-bottom: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.highlight {
+    background: #f0f8ff;
 }
 
 h1 {
-    color: #333;
+    color: white;
 }
 
 ul {
@@ -22,21 +31,18 @@ ul {
 }
 
 li {
-    margin: 10px 0;
+    padding: 10px;
+    background: #f7f7f7;
+    margin: 8px 0;
+    border-radius: 8px;
 }
 
-li a {
+a {
     text-decoration: none;
-    background: #eef;
-    padding: 10px;
-    display: block;
-    border-radius: 6px;
 }
 
-button {
-    background: #4facfe;
+.logout {
+    display: inline-block;
+    margin-top: 20px;
     color: white;
-    padding: 10px;
-    border: none;
-    width: 100%;
 }

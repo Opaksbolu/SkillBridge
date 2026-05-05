@@ -1,35 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<title>Dashboard</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
 <div class="container">
 
-<h1>Welcome, {{ user[0] }} 🎉</h1>
+<h1>{{ text.welcome }}, {{ user[1] }} 👋</h1>
 
-<p><strong>Learning Style:</strong> {{ user[1] }}</p>
-<p><strong>Language:</strong> {{ user[2] }}</p>
-<p><strong>Grade:</strong> {{ user[3] }}</p>
-
-<h3>Your Subjects</h3>
+<div class="card">
+<h3>{{ text.subjects }}</h3>
 <ul>
-{% for subject in user[4].split(', ') %}
-    <li><a href="/learn/{{ subject }}">{{ subject }}</a></li>
+{% for subject in user[7].split(', ') %}
+<li><a href="/learn/{{ subject }}">{{ subject }}</a></li>
 {% endfor %}
 </ul>
+</div>
 
-<h3>Recommended For You 🤖</h3>
+<div class="card highlight">
+<h3>{{ text.recommended }} 🤖</h3>
 <ul>
 {% for rec in recommendations %}
-    <li>{{ rec }}</li>
+<li>{{ rec }}</li>
 {% endfor %}
 </ul>
+</div>
 
-<br>
-<a href="/logout">Logout</a>
+<a href="/logout" class="logout">{{ text.logout }}</a>
 
 </div>
 
