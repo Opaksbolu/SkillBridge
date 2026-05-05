@@ -1,74 +1,50 @@
 body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f5f7fb;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
     margin: 0;
-    padding: 0;
 }
 
-/* Layout */
 .container {
-    max-width: 800px;
-    margin: 60px auto;
+    max-width: 900px;
+    margin: 50px auto;
     padding: 20px;
 }
 
-/* Header */
-h1 {
-    font-size: 28px;
-    color: #1a1a1a;
-    margin-bottom: 20px;
-}
-
-/* Cards */
 .card {
     background: white;
     padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    border-radius: 14px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
 }
 
-/* Section titles */
-h3 {
-    margin-bottom: 10px;
-    color: #333;
+.subject-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
 }
 
-/* Lists */
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-li {
-    margin: 8px 0;
-}
-
-/* Subject buttons */
-.subject-link {
-    display: block;
-    padding: 12px;
-    background: #eef3ff;
-    border-radius: 8px;
-    color: #1a1a1a;
-    font-weight: 500;
+.subject-card {
+    background: #f1f5ff;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 600;
     transition: 0.2s;
 }
 
-.subject-link:hover {
+.subject-card:hover {
     background: #dbe6ff;
 }
 
-/* Recommendations */
-.recommendation {
-    background: #f0fff4;
-    padding: 10px;
-    border-radius: 8px;
+.lesson {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 12px;
 }
 
-/* Logout */
 .logout {
-    display: inline-block;
     margin-top: 20px;
-    color: #555;
+    display: inline-block;
 }

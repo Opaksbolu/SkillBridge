@@ -1,39 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Subjects</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<title>Select Subjects</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
 <div class="container">
+<div class="card">
 
-<a href="/register" class="back-btn">← Back</a>
-
-<h2>Select Subjects</h2>
+<h2>Select Your Subjects</h2>
 
 <form method="POST">
 
-<h3>Core Subjects</h3>
 <label><input type="checkbox" name="subjects" value="Math"> Math</label><br>
 <label><input type="checkbox" name="subjects" value="Science"> Science</label><br>
 <label><input type="checkbox" name="subjects" value="English"> English</label><br>
 <label><input type="checkbox" name="subjects" value="History"> History</label><br>
+<label><input type="checkbox" name="subjects" value="Computer Science"> Computer Science</label><br><br>
 
-<h3>STEM</h3>
-<label><input type="checkbox" name="subjects" value="Computer Science"> Computer Science</label><br>
-<label><input type="checkbox" name="subjects" value="Engineering"> Engineering</label><br>
-
-<h3>Languages</h3>
-<label><input type="checkbox" name="subjects" value="Spanish"> Spanish</label><br>
-<label><input type="checkbox" name="subjects" value="French"> French</label><br>
-
-<h3>Creative</h3>
-<label><input type="checkbox" name="subjects" value="Art"> Art</label><br>
-<label><input type="checkbox" name="subjects" value="Music"> Music</label><br>
-<button type="submit">Finish</button>
+<button type="submit">Continue</button>
 
 </form>
+
+</div>
 </div>
 
 </body>

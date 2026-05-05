@@ -11,26 +11,30 @@
 
 <h1>{{ text.welcome }}, {{ user[1] }} 👋</h1>
 
+<!-- SUBJECTS -->
 <div class="card">
 <h3>{{ text.subjects }}</h3>
-<ul>
-{% for subject in translated_subjects %}
-<li>
-<a class="subject-link" href="/learn/{{ subject }}">
-{{ subject }}
+
+<div class="subject-grid">
+{% for subject in subjects %}
+<a href="/learn/{{ subject.original }}">
+    <div class="subject-card">
+        {{ subject.translated }}
+    </div>
 </a>
-</li>
 {% endfor %}
-</ul>
 </div>
 
+</div>
+
+<!-- RECOMMENDATIONS -->
 <div class="card">
 <h3>{{ text.recommended }} 🤖</h3>
-<ul>
+
 {% for rec in recommendations %}
-<li class="recommendation">{{ rec }}</li>
+<div class="recommendation">{{ rec }}</div>
 {% endfor %}
-</ul>
+
 </div>
 
 <a href="/logout" class="logout">{{ text.logout }}</a>

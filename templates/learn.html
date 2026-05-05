@@ -1,25 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Learn {{ subject }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<title>{{ subject }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
 <div class="container">
 
-<a href="/dashboard" class="back-btn">← Back</a>
+<h1>{{ subject }} 📘</h1>
 
-<h1>{{ subject }} 📚</h1>
+<div class="card">
+<h3>Lessons</h3>
 
-<p><strong>Language:</strong> {{ language }}</p>
-
-<p>This course will adapt to your selected language.</p>
-
-<div class="lesson-box">
-    <h3>Lesson 1</h3>
-    <p>Content coming soon...</p>
+{% for lesson in lessons %}
+<div class="lesson">
+    <h4>{{ lesson.title }}</h4>
+    <p>{{ lesson.content }}</p>
 </div>
+{% endfor %}
+
+</div>
+
+<a href="/dashboard" class="logout">⬅ Back to Dashboard</a>
 
 </div>
 
