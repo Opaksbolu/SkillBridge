@@ -29,6 +29,32 @@ translations = {
     }
 }
 
+# 🌍 SUBJECT TRANSLATIONS
+subject_translations = {
+    "English": {
+        "Math": "Math",
+        "Science": "Science",
+        "English": "English",
+        "History": "History",
+        "Computer Science": "Computer Science"
+    },
+    "Spanish": {
+        "Math": "Matemáticas",
+        "Science": "Ciencia",
+        "English": "Inglés",
+        "History": "Historia",
+        "Computer Science": "Informática"
+    },
+    "French": {
+        "Math": "Mathématiques",
+        "Science": "Science",
+        "English": "Anglais",
+        "History": "Histoire",
+        "Computer Science": "Informatique"
+    }
+}
+
+
 def get_text(language, key):
     return translations.get(language, translations["English"]).get(key, key)
 
@@ -147,9 +173,15 @@ def dashboard():
     user = cursor.fetchone()
     conn.close()
 
-    recommendations = get_recommendations(user[4], user[6])
+    language = user[5]
 
-    text = translations.get(user[5], translations["English"])
+    text = translations.get(language, translations["English"])
+    subject_map = subject_translations.get(language, subject_translations["English"])
+
+    raw_subjects = user[7].split(", ")
+    translated_subjects = [subject_map.get(s, s) for s in raw_subjects]
+
+    recommendations = get_recommendations(user[4], user[6])
 
     return render_template(
         'dashboard.html',
