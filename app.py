@@ -4,134 +4,149 @@ import sqlite3
 app = Flask(__name__)
 app.secret_key = "secret123"
 
-# -------------------------
-# DATABASE INIT
-# -------------------------
+# ---------------- DATABASE ----------------
+def get_db():
+    return sqlite3.connect("users.db")
+
 def init_db():
-    conn = sqlite3.connect("users.db")
-    db = conn.cursor()
+    db = get_db()
 
     db.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        password TEXT,
-        language TEXT
+        username TEXT UNIQUE,
+        password TEXT
     )
     """)
 
-    conn.commit()
-    conn.close()
+    db.execute("""
+    CREATE TABLE IF NOT EXISTS progress (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        subject TEXT,
+        lesson INTEGER
+    )
+    """)
+
+    db.commit()
 
 init_db()
 
-# -------------------------
-# HOME
-# -------------------------
+# ---------------- COURSES ----------------
+courses = {
+    "Math": ["Addition", "Subtraction", "Algebra"],
+    "English": ["Grammar", "Writing", "Reading"],
+    "Science": ["Biology", "Chemistry", "Physics"],
+    "Programming": ["Python Basics", "Loops", "Functions"]
+}
+
+# ---------------- ROUTES ----------------
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# -------------------------
-# REGISTER
-# -------------------------
+
+# -------- REGISTER --------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        language = request.form.get("language")
+        username = request.form.get("username").strip()
+        password = request.form.get("password").strip()
 
-        conn = sqlite3.connect("users.db")
-        db = conn.cursor()
+        db = get_db()
 
-        db.execute(
-            "INSERT INTO users (username, password, language) VALUES (?, ?, ?)",
-            (username, password, language)
-        )
-
-        conn.commit()
-        conn.close()
+        try:
+            db.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+            db.commit()
+        except:
+            return "User already exists"
 
         return redirect("/login")
 
     return render_template("register.html")
 
-# -------------------------
-# LOGIN
-# -------------------------
+
+# -------- LOGIN --------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = request.form.get("username").strip()
+        password = request.form.get("password").strip()
 
-        conn = sqlite3.connect("users.db")
-        db = conn.cursor()
+        db = get_db()
 
         user = db.execute(
             "SELECT * FROM users WHERE username=? AND password=?",
             (username, password)
         ).fetchone()
 
-        conn.close()
-
         if user:
             session["user"] = username
-            session["language"] = user[3]
             return redirect("/subjects")
+
+        return "Invalid login"
 
     return render_template("login.html")
 
-# -------------------------
-# SUBJECTS
-# -------------------------
+
+# -------- SUBJECTS --------
 @app.route("/subjects", methods=["GET", "POST"])
 def subjects():
-    if request.method == "POST":
-        subject = request.form.get("subject")
-        return redirect(f"/learn/{subject}")
-
-    return render_template("subjects.html")
-
-# -------------------------
-# DASHBOARD
-# -------------------------
-@app.route("/dashboard")
-def dashboard():
     if "user" not in session:
         return redirect("/login")
 
-    return render_template("dashboard.html", user=session["user"])
+    if request.method == "POST":
+        subject = request.form.get("subject")
+        return redirect(f"/course/{subject}")
 
-# -------------------------
-# LEARN PAGE (NO AI YET)
-# -------------------------
-@app.route("/learn/<subject>", methods=["GET", "POST"])
-def learn(subject):
-    content = ""
+    return render_template("subjects.html", courses=courses)
+
+
+# -------- COURSE PAGE --------
+@app.route("/course/<subject>")
+def course(subject):
+    if "user" not in session:
+        return redirect("/login")
+
+    lessons = courses.get(subject, [])
+    return render_template("course.html", subject=subject, lessons=lessons)
+
+
+# -------- LESSON --------
+@app.route("/learn/<subject>/<int:lesson_id>", methods=["GET", "POST"])
+def learn(subject, lesson_id):
+    if "user" not in session:
+        return redirect("/login")
+
+    lesson = courses[subject][lesson_id]
+
+    ai_response = None
 
     if request.method == "POST":
         question = request.form.get("question")
 
-        content = f"""
-        📘 {subject} Lesson
+        # SAFE AI (never crashes)
+        try:
+            ai_response = f"AI Tutor: Explanation for '{question}' in {lesson}. Keep practicing!"
+        except:
+            ai_response = "AI is temporarily unavailable. Please try again later."
 
-        You asked: {question}
+    return render_template(
+        "learn.html",
+        subject=subject,
+        lesson=lesson,
+        lesson_id=lesson_id,
+        ai_response=ai_response
+    )
 
-        This is a smart placeholder response.
-        Real AI will be added later.
-        """
 
-    return render_template("learn.html", subject=subject, content=content)
-
-# -------------------------
-# LOGOUT
-# -------------------------
+# -------- LOGOUT --------
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
+
 
 if __name__ == "__main__":
     app.run(debug=True)

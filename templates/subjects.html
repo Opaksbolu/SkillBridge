@@ -1,20 +1,26 @@
-<link rel="stylesheet" href="/static/style.css">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Subject</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
-<div class="container">
-    <div class="card">
-        <h1>Select a Subject</h1>
+<h2>Select a Subject</h2>
 
-        <form method="POST">
-            <select name="subject">
-                <option value="Math">Math</option>
-                <option value="English">English</option>
-                <option value="Science">Science</option>
-                <option value="Spanish">Spanish</option>
-            </select><br>
+<form method="POST">
+    <select name="subject">
+        <option>Math</option>
+        <option>English</option>
+        <option>Science</option>
+        <option>Spanish</option>
+        <option>Programming</option>
+    </select>
 
-            <button type="submit">Start Learning</button>
-        </form>
+    <button type="submit">Continue</button>
+</form>
 
-        <a href="/dashboard" class="back-btn">← Back</a>
-    </div>
-</div>
+<a href="/logout">Logout</a>
+
+</body>
+</html>
