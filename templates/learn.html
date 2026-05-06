@@ -1,27 +1,20 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{subject}}</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+<link rel="stylesheet" href="/static/style.css">
 
 <div class="container">
-    <a class="btn" href="/dashboard">⬅ Back</a>
+    <div class="card">
+        <h1>{{ subject }}</h1>
 
-    <h1>Learning {{subject}}</h1>
+        <form method="POST">
+            <input type="text" name="question" placeholder="Ask a question..." required>
+            <button type="submit">Ask</button>
+        </form>
 
-    <form method="POST">
-        <input type="text" name="question" placeholder="Ask something..." required>
-        <button type="submit">Ask AI</button>
-    </form>
+        {% if content %}
+            <div style="margin-top:20px;">
+                <p>{{ content }}</p>
+            </div>
+        {% endif %}
 
-    {% if ai_response %}
-        <div class="response">
-            {{ai_response}}
-        </div>
-    {% endif %}
+        <a href="/subjects" class="back-btn">← Change Subject</a>
+    </div>
 </div>
-
-</body>
-</html>

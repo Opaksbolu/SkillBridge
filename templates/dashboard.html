@@ -1,26 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+<link rel="stylesheet" href="/static/style.css">
 
 <div class="container">
-    <h1>Welcome, {{ session['user'] }} 👋</h1>
+    <div class="card">
+        <h1>Welcome, {{ user }}</h1>
 
-    <h2>Your Subjects</h2>
+        <p>Ready to start learning?</p>
 
-    <div class="subjects">
-        {% for subject in subjects %}
-            <a class="card" href="/learn/{{subject}}">{{subject}}</a>
-        {% endfor %}
+        <a href="/subjects">
+            <button>Go to Subjects</button>
+        </a>
+
+        <a href="/logout">
+            <button>Logout</button>
+        </a>
     </div>
-
-    <br>
-    <a class="btn" href="/subjects">⬅ Change Subjects</a>
-    <a class="btn" href="/logout">Logout</a>
 </div>
-
-</body>
-</html>

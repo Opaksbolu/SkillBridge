@@ -1,28 +1,20 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Choose Subjects</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <div class="container">
-        <h2>Select Your Subjects</h2>
+<link rel="stylesheet" href="/static/style.css">
+
+<div class="container">
+    <div class="card">
+        <h1>Select a Subject</h1>
 
         <form method="POST">
-            <div class="subject-grid">
-                {% for subject in subjects %}
-                    <label class="subject">
-                        <input type="checkbox" name="subjects" value="{{ subject }}">
-                        {{ subject }}
-                    </label>
-                {% endfor %}
-            </div>
+            <select name="subject">
+                <option value="Math">Math</option>
+                <option value="English">English</option>
+                <option value="Science">Science</option>
+                <option value="Spanish">Spanish</option>
+            </select><br>
 
-            <button type="submit">Continue</button>
+            <button type="submit">Start Learning</button>
         </form>
 
-        <br>
-        <a href="/register">⬅ Back</a>
+        <a href="/dashboard" class="back-btn">← Back</a>
     </div>
-</body>
-</html>
+</div>
