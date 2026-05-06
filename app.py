@@ -1,4 +1,7 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+try:
+    from flask import Flask, render_template, request, redirect, session
+except ImportError as e:
+    raise ImportError("Flask is not installed. Run `pip install flask` to install it.") from e
 import sqlite3
 
 app = Flask(__name__)
@@ -36,24 +39,24 @@ def index():
 # ======================
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-        language = request.form.get("language")
+    if request.method != "POST":
+        return render_template("register.html")
 
-        db = get_db()
-        try:
-            db.execute(
-                "INSERT INTO users (email, password, language) VALUES (?, ?, ?)",
-                (email, password, language)
-            )
-            db.commit()
-        except:
-            return "User already exists"
+    email = request.form.get("email")
+    password = request.form.get("password")
+    language = request.form.get("language")
 
-        return redirect("/login")
+    db = get_db()
+    try:
+        db.execute(
+            "INSERT INTO users (email, password, language) VALUES (?, ?, ?)",
+            (email, password, language)
+        )
+        db.commit()
+    except:
+        return "User already exists"
 
-    return render_template("register.html")
+    return redirect("/login")
 
 
 # ======================
@@ -61,6 +64,8 @@ def register():
 # ======================
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if "user" in session:
+        return redirect("/dashboard")
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
@@ -71,12 +76,12 @@ def login():
             (email, password)
         ).fetchone()
 
-        if user:
-            session["user"] = user[1]
-            session["language"] = user[3]
-            return redirect("/subjects")
-        else:
+        if not user:
             return render_template("login.html", error="Invalid login")
+
+        session["user"] = user[1]
+        session["language"] = user[3]
+        return redirect("/subjects")
 
     return render_template("login.html")
 
