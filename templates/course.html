@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ subject }} Course</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>{{ subject }} Course</h1>
+
+        <p>Select a lesson to start learning:</p>
+
+        <div class="lessons">
+            {% for lesson in lessons %}
+                <div class="lesson-card">
+                    <h3>{{ lesson }}</h3>
+                    <a href="/learn/{{ subject }}">Start Lesson</a>
+                </div>
+            {% endfor %}
+        </div>
+
+        <br>
+
+        <a href="/dashboard">⬅ Back to Dashboard</a>
+        <br>
+        <a href="/subjects">🔁 Change Subject</a>
+
+    </div>
+
+</body>
+</html>

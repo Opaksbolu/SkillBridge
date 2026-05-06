@@ -11,6 +11,19 @@ app.secret_key = "supersecretkey"
 def get_db():
     return sqlite3.connect("users.db")
 
+@app.route("/course/<subject>")
+def course(subject):
+    if "user" not in session:
+        return redirect("/login")
+
+    lessons = [
+        f"Introduction to {subject}",
+        f"{subject} Basics",
+        f"Intermediate {subject}",
+        f"Advanced {subject}"
+    ]
+
+    return render_template("course.html", subject=subject, lessons=lessons)
 
 # 🔹 CREATE DATABASE (RUN ONCE)
 def init_db():
