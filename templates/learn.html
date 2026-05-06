@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Learn</title>
+    <title>{{subject}}</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Learn {{ subject }}</h1>
 
-        <form method="POST">
-            <input type="text" name="question" placeholder="Ask anything..." required style="width:100%; padding:10px;">
-            <button type="submit">Ask AI</button>
-        </form>
+<div class="container">
+    <a class="btn" href="/dashboard">⬅ Back</a>
 
-        {% if response %}
-            <div class="card">
-                <h3>AI Tutor Response:</h3>
-                <p>{{ response }}</p>
-            </div>
-        {% endif %}
+    <h1>Learning {{subject}}</h1>
 
-        <br>
-        <a href="/dashboard">⬅ Back to Dashboard</a>
-    </div>
+    <form method="POST">
+        <input type="text" name="question" placeholder="Ask something..." required>
+        <button type="submit">Ask AI</button>
+    </form>
+
+    {% if ai_response %}
+        <div class="response">
+            {{ai_response}}
+        </div>
+    {% endif %}
+</div>
+
 </body>
 </html>

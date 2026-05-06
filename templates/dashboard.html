@@ -5,27 +5,22 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome, {{ user[1] }} 👋</h1>
 
-        <div class="card">
-            <h2>Your Subjects</h2>
-            <div class="subject-grid">
-                {% for subject in user[5].split(',') %}
-                    <a href="/learn/{{ subject }}">{{ subject }}</a>
-                {% endfor %}
-            </div>
-        </div>
+<div class="container">
+    <h1>Welcome, {{ session['user'] }} 👋</h1>
 
-        <div class="card">
-            <h2>🤖 Recommended</h2>
-            <p>{{ recommendation }}</p>
-        </div>
+    <h2>Your Subjects</h2>
 
-        <br>
-        <a href="/subjects">🔁 Change Subjects</a>
-        <a href="/register">🌍 Change Language</a>
-        <a href="/logout">Logout</a>
+    <div class="subjects">
+        {% for subject in subjects %}
+            <a class="card" href="/learn/{{subject}}">{{subject}}</a>
+        {% endfor %}
     </div>
+
+    <br>
+    <a class="btn" href="/subjects">⬅ Change Subjects</a>
+    <a class="btn" href="/logout">Logout</a>
+</div>
+
 </body>
 </html>
