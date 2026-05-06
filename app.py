@@ -1,23 +1,29 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session
 import sqlite3
-import os
-
-# Optional AI import
-USE_AI = True
-try:
-    from openai import OpenAI
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-except:
-    USE_AI = False
 
 app = Flask(__name__)
 app.secret_key = "secret123"
 
 # -------------------------
-# DATABASE
+# DATABASE INIT
 # -------------------------
-def get_db():
-    return sqlite3.connect("users.db")
+def init_db():
+    conn = sqlite3.connect("users.db")
+    db = conn.cursor()
+
+    db.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        password TEXT,
+        language TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+init_db()
 
 # -------------------------
 # HOME
@@ -32,14 +38,20 @@ def home():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        language = request.form["language"]
+        username = request.form.get("username")
+        password = request.form.get("password")
+        language = request.form.get("language")
 
-        db = get_db()
-        db.execute("INSERT INTO users (username, password, language) VALUES (?, ?, ?)",
-                   (username, password, language))
-        db.commit()
+        conn = sqlite3.connect("users.db")
+        db = conn.cursor()
+
+        db.execute(
+            "INSERT INTO users (username, password, language) VALUES (?, ?, ?)",
+            (username, password, language)
+        )
+
+        conn.commit()
+        conn.close()
 
         return redirect("/login")
 
@@ -54,35 +66,31 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        if not username or not password:
-            return "Missing fields"
+        conn = sqlite3.connect("users.db")
+        db = conn.cursor()
 
-        db = get_db()
         user = db.execute(
             "SELECT * FROM users WHERE username=? AND password=?",
             (username, password)
         ).fetchone()
 
+        conn.close()
+
         if user:
             session["user"] = username
+            session["language"] = user[3]
             return redirect("/subjects")
-
-        return "Invalid login"
 
     return render_template("login.html")
 
 # -------------------------
-# SUBJECT SELECTION
+# SUBJECTS
 # -------------------------
 @app.route("/subjects", methods=["GET", "POST"])
 def subjects():
-    if "user" not in session:
-        return redirect("/login")
-
     if request.method == "POST":
-        selected = request.form.getlist("subjects")
-        session["subjects"] = selected
-        return redirect("/dashboard")
+        subject = request.form.get("subject")
+        return redirect(f"/learn/{subject}")
 
     return render_template("subjects.html")
 
@@ -94,42 +102,28 @@ def dashboard():
     if "user" not in session:
         return redirect("/login")
 
-    subjects = session.get("subjects", [])
-
-    return render_template("dashboard.html", subjects=subjects)
+    return render_template("dashboard.html", user=session["user"])
 
 # -------------------------
-# LEARNING PAGE (AI + FALLBACK)
+# LEARN PAGE (NO AI YET)
 # -------------------------
 @app.route("/learn/<subject>", methods=["GET", "POST"])
 def learn(subject):
-    if "user" not in session:
-        return redirect("/login")
-
-    ai_response = None
+    content = ""
 
     if request.method == "POST":
-        question = request.form["question"]
+        question = request.form.get("question")
 
-        if USE_AI:
-            try:
-                ai = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful tutor."},
-                        {"role": "user", "content": question}
-                    ]
-                )
-                ai_response = ai.choices[0].message.content
+        content = f"""
+        📘 {subject} Lesson
 
-            except Exception:
-                # Fallback if API fails
-                ai_response = f"(Offline Mode) Here's a helpful explanation about {subject}: Focus on fundamentals, practice problems, and consistency."
+        You asked: {question}
 
-        else:
-            ai_response = f"(Offline Mode) Learning {subject}: Start with basics, watch tutorials, and practice daily."
+        This is a smart placeholder response.
+        Real AI will be added later.
+        """
 
-    return render_template("learn.html", subject=subject, ai_response=ai_response)
+    return render_template("learn.html", subject=subject, content=content)
 
 # -------------------------
 # LOGOUT
@@ -139,8 +133,5 @@ def logout():
     session.clear()
     return redirect("/")
 
-# -------------------------
-# RUN
-# -------------------------
 if __name__ == "__main__":
     app.run(debug=True)
