@@ -1,7 +1,4 @@
-try:
-    from flask import Flask, render_template, request, redirect, session
-except ImportError as e:
-    raise ImportError("Flask is not installed. Run `pip install flask` to install it.") from e
+from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 
 app = Flask(__name__)
@@ -11,19 +8,6 @@ app.secret_key = "supersecretkey"
 def get_db():
     return sqlite3.connect("users.db")
 
-@app.route("/course/<subject>")
-def course(subject):
-    if "user" not in session:
-        return redirect("/login")
-
-    lessons = [
-        f"Introduction to {subject}",
-        f"{subject} Basics",
-        f"Intermediate {subject}",
-        f"Advanced {subject}"
-    ]
-
-    return render_template("course.html", subject=subject, lessons=lessons)
 
 # 🔹 CREATE DATABASE (RUN ONCE)
 def init_db():
@@ -52,24 +36,24 @@ def index():
 # ======================
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method != "POST":
-        return render_template("register.html")
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        language = request.form.get("language")
 
-    email = request.form.get("email")
-    password = request.form.get("password")
-    language = request.form.get("language")
+        db = get_db()
+        try:
+            db.execute(
+                "INSERT INTO users (email, password, language) VALUES (?, ?, ?)",
+                (email, password, language)
+            )
+            db.commit()
+        except:
+            return "User already exists"
 
-    db = get_db()
-    try:
-        db.execute(
-            "INSERT INTO users (email, password, language) VALUES (?, ?, ?)",
-            (email, password, language)
-        )
-        db.commit()
-    except:
-        return "User already exists"
+        return redirect("/login")
 
-    return redirect("/login")
+    return render_template("register.html")
 
 
 # ======================
@@ -77,8 +61,6 @@ def register():
 # ======================
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if "user" in session:
-        return redirect("/dashboard")
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
@@ -89,12 +71,12 @@ def login():
             (email, password)
         ).fetchone()
 
-        if not user:
+        if user:
+            session["user"] = user[1]
+            session["language"] = user[3]
+            return redirect("/subjects")
+        else:
             return render_template("login.html", error="Invalid login")
-
-        session["user"] = user[1]
-        session["language"] = user[3]
-        return redirect("/subjects")
 
     return render_template("login.html")
 
@@ -158,6 +140,21 @@ def learn(subject):
         subject=subject,
         ai_response=ai_response
     )
+
+
+@app.route("/course/<subject>")
+def course(subject):
+    if "user" not in session:
+        return redirect("/login")
+
+    lessons = [
+        f"Introduction to {subject}",
+        f"{subject} Basics",
+        f"Intermediate {subject}",
+        f"Advanced {subject}"
+    ]
+
+    return render_template("course.html", subject=subject, lessons=lessons)
 
 
 # ======================
