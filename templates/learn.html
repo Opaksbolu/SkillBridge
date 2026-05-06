@@ -4,14 +4,29 @@
     <div class="card">
         <h2>{{ subject }} - {{ lesson }}</h2>
 
-        <form method="POST">
-            <input name="question" placeholder="Ask AI tutor..." required>
-            <button>Ask</button>
-        </form>
 
-        {% if ai_response %}
-            <p>{{ ai_response }}</p>
-        {% endif %}
+
+<form method="POST">
+
+    <input name="question" placeholder="Ask AI something...">
+
+    <button type="submit">Ask</button>
+
+<h2>Learning {{ subject }}</h2>
+
+
+</form>
+
+{% if ai_response %}
+
+<p>{{ ai_response }}</p>
+
+{% endif %}
+
+<br>
+
+<a href="/dashboard">⬅ Back</a>
+
 
         <a href="/course/{{ subject }}">← Back to lessons</a>
     </div>

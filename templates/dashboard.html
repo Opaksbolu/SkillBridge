@@ -8,16 +8,18 @@
 
 <h2>Dashboard</h2>
 
-<p>Selected Subject: {{ subject }}</p>
+<p>Subject: {{ subject }}</p>
 
-<a href="/learn/{{ subject }}">
-    <button>Start Learning</button>
-</a>
+<p>Language: {{ language }}</p>
+
+<a href="/learn/{{ subject }}">Start Learning</a>
 
 <br><br>
 
-<a href="/subjects">⬅ Change Subject</a>
+<a href="/subjects">⬅ Back to Subjects</a>
+
 <br>
+
 <a href="/logout">Logout</a>
 
 </body>
