@@ -1,31 +1,35 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>{{ subject }} Course</title>
+    <title>{{ subject }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
 <div class="container">
 
-    <h1>{{ subject }} Course</h1>
+    <a href="/subjects" class="back-btn">← Back</a>
 
-    <a href="/subjects" class="back-btn">← Back to Subjects</a>
+    <h1>{{ subject }}</h1>
 
     <div class="lesson-grid">
 
         {% for lesson in lessons %}
 
         <div class="lesson-card">
+
             <h2>{{ lesson }}</h2>
 
             <p>
-                Learn important concepts and improve your skills.
+                Improve your understanding and build real skills.
             </p>
 
             <a href="/learn/{{ subject }}">
                 Start Learning
             </a>
+
         </div>
 
         {% endfor %}

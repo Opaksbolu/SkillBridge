@@ -1,26 +1,24 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
-import os
 
 app = Flask(__name__)
-app.secret_key = "skillbridge_secret_key"
+app.secret_key = "skillbridge_secret"
 
 DATABASE = "users.db"
 
 
-# -----------------------------
-# DATABASE SETUP
-# -----------------------------
+# ---------------- DATABASE ---------------- #
+
 def init_db():
     conn = sqlite3.connect(DATABASE)
     db = conn.cursor()
 
     db.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        password TEXT NOT NULL
-    )
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            password TEXT
+        )
     """)
 
     conn.commit()
@@ -30,48 +28,48 @@ def init_db():
 init_db()
 
 
-# -----------------------------
-# COURSE CONTENT
-# -----------------------------
+# ---------------- COURSE DATA ---------------- #
+
 courses = {
     "Math": [
-        "Algebra Basics",
-        "Fractions",
+        "Algebra",
         "Geometry",
-        "Statistics"
+        "Statistics",
+        "Trigonometry"
     ],
+
     "Science": [
         "Biology",
         "Chemistry",
         "Physics",
         "Earth Science"
     ],
+
     "Programming": [
-        "Python Basics",
+        "Python",
         "HTML & CSS",
         "JavaScript",
-        "Flask Development"
+        "Flask"
     ],
+
     "Spanish": [
         "Greetings",
         "Numbers",
-        "Common Phrases",
-        "Conversations"
+        "Conversations",
+        "Vocabulary"
     ]
 }
 
 
-# -----------------------------
-# HOME
-# -----------------------------
+# ---------------- HOME ---------------- #
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-# -----------------------------
-# REGISTER
-# -----------------------------
+# ---------------- REGISTER ---------------- #
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
@@ -79,12 +77,6 @@ def register():
 
         username = request.form.get("username")
         password = request.form.get("password")
-
-        if not username or not password:
-            return render_template(
-                "register.html",
-                error="Please fill all fields"
-            )
 
         conn = sqlite3.connect(DATABASE)
         db = conn.cursor()
@@ -102,9 +94,8 @@ def register():
     return render_template("register.html")
 
 
-# -----------------------------
-# LOGIN
-# -----------------------------
+# ---------------- LOGIN ---------------- #
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -135,18 +126,8 @@ def login():
     return render_template("login.html")
 
 
-# -----------------------------
-# LOGOUT
-# -----------------------------
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
+# ---------------- SUBJECTS ---------------- #
 
-
-# -----------------------------
-# SUBJECT SELECTION
-# -----------------------------
 @app.route("/subjects", methods=["GET", "POST"])
 def subjects():
 
@@ -157,8 +138,12 @@ def subjects():
 
         subject = request.form.get("subject")
 
-        if subject:
-            return redirect(url_for("course", subject=subject))
+        return redirect(
+            url_for(
+                "course",
+                subject=subject
+            )
+        )
 
     return render_template(
         "subjects.html",
@@ -166,9 +151,8 @@ def subjects():
     )
 
 
-# -----------------------------
-# COURSE PAGE
-# -----------------------------
+# ---------------- COURSE PAGE ---------------- #
+
 @app.route("/course/<subject>")
 def course(subject):
 
@@ -184,9 +168,8 @@ def course(subject):
     )
 
 
-# -----------------------------
-# AI LEARN PAGE (SAFE FALLBACK)
-# -----------------------------
+# ---------------- LEARN PAGE ---------------- #
+
 @app.route("/learn/<subject>", methods=["GET", "POST"])
 def learn(subject):
 
@@ -200,14 +183,14 @@ def learn(subject):
         question = request.form.get("question")
 
         ai_response = f"""
-        AI Tutor is temporarily offline.
+AI Tutor is temporarily offline.
 
-        Your question:
-        "{question}"
+Question:
+{question}
 
-        Suggested learning tip:
-        Practice consistently and focus on understanding the fundamentals of {subject}.
-        """
+Recommended Study Tip:
+Focus on practicing one concept at a time in {subject}.
+"""
 
     return render_template(
         "learn.html",
@@ -216,8 +199,15 @@ def learn(subject):
     )
 
 
-# -----------------------------
-# RUN APP
-# -----------------------------
+# ---------------- LOGOUT ---------------- #
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+
+# ---------------- RUN APP ---------------- #
+
 if __name__ == "__main__":
     app.run(debug=True)
