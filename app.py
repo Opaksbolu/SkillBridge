@@ -2,8 +2,12 @@ from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 import os
 
+# =========================
+# APP CONFIG
+# =========================
+
 app = Flask(__name__)
-app.secret_key = "skillbridge_secret"
+app.secret_key = "skillbridge_secret_key"
 
 DATABASE = "users.db"
 
@@ -12,6 +16,7 @@ DATABASE = "users.db"
 # =========================
 
 def init_db():
+
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
@@ -29,10 +34,11 @@ def init_db():
 init_db()
 
 # =========================
-# LANGUAGE SYSTEM
+# LANGUAGES
 # =========================
 
 translations = {
+
     "English": {
         "welcome": "Welcome to SkillBridge",
         "login": "Login",
@@ -40,9 +46,10 @@ translations = {
         "dashboard": "Dashboard",
         "subjects": "Subjects",
         "logout": "Logout",
-        "start_learning": "Start Learning",
-        "choose_subject": "Choose a Subject",
         "ai_tutor": "AI Tutor",
+        "choose_subject": "Choose Subject",
+        "ask_ai": "Ask AI",
+        "progress": "Progress"
     },
 
     "Spanish": {
@@ -52,21 +59,23 @@ translations = {
         "dashboard": "Panel",
         "subjects": "Materias",
         "logout": "Cerrar sesión",
-        "start_learning": "Comenzar aprendizaje",
-        "choose_subject": "Elegir una materia",
         "ai_tutor": "Tutor IA",
+        "choose_subject": "Elegir materia",
+        "ask_ai": "Preguntar IA",
+        "progress": "Progreso"
     },
 
     "French": {
         "welcome": "Bienvenue sur SkillBridge",
         "login": "Connexion",
-        "register": "S'inscrire",
+        "register": "Inscription",
         "dashboard": "Tableau de bord",
         "subjects": "Sujets",
         "logout": "Déconnexion",
-        "start_learning": "Commencer",
-        "choose_subject": "Choisir une matière",
         "ai_tutor": "Tuteur IA",
+        "choose_subject": "Choisir un sujet",
+        "ask_ai": "Demander IA",
+        "progress": "Progrès"
     }
 }
 
@@ -75,13 +84,53 @@ def get_text():
     return translations.get(language, translations["English"])
 
 # =========================
+# COURSES
+# =========================
+
+COURSES = {
+
+    "Math": [
+        "Algebra Basics",
+        "Geometry",
+        "Statistics",
+        "Advanced Calculus"
+    ],
+
+    "Science": [
+        "Biology",
+        "Chemistry",
+        "Physics",
+        "Astronomy"
+    ],
+
+    "Programming": [
+        "Python",
+        "Flask",
+        "Databases",
+        "APIs"
+    ],
+
+    "Spanish": [
+        "Greetings",
+        "Conversations",
+        "Grammar",
+        "Fluency"
+    ]
+}
+
+# =========================
 # HOME
 # =========================
 
 @app.route("/")
 def home():
+
     text = get_text()
-    return render_template("index.html", text=text)
+
+    return render_template(
+        "index.html",
+        text=text
+    )
 
 # =========================
 # REGISTER
@@ -89,9 +138,11 @@ def home():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+
     text = get_text()
 
     if request.method == "POST":
+
         username = request.form.get("username")
         password = request.form.get("password")
 
@@ -99,6 +150,7 @@ def register():
         cursor = conn.cursor()
 
         try:
+
             cursor.execute(
                 "INSERT INTO users (username, password) VALUES (?, ?)",
                 (username, password)
@@ -117,7 +169,10 @@ def register():
 
         return redirect("/login")
 
-    return render_template("register.html", text=text)
+    return render_template(
+        "register.html",
+        text=text
+    )
 
 # =========================
 # LOGIN
@@ -125,6 +180,7 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
     text = get_text()
 
     if request.method == "POST":
@@ -145,7 +201,9 @@ def login():
         conn.close()
 
         if user:
+
             session["user"] = username
+
             return redirect("/dashboard")
 
         return render_template(
@@ -154,7 +212,10 @@ def login():
             text=text
         )
 
-    return render_template("login.html", text=text)
+    return render_template(
+        "login.html",
+        text=text
+    )
 
 # =========================
 # DASHBOARD
@@ -168,29 +229,17 @@ def dashboard():
 
     text = get_text()
 
-    courses = [
-        {
-            "name": "Math",
-            "progress": 40
-        },
-        {
-            "name": "Science",
-            "progress": 70
-        },
-        {
-            "name": "Programming",
-            "progress": 20
-        },
-        {
-            "name": "Spanish",
-            "progress": 90
-        }
-    ]
+    course_progress = {
+        "Math": 45,
+        "Science": 72,
+        "Programming": 20,
+        "Spanish": 88
+    }
 
     return render_template(
         "dashboard.html",
         user=session["user"],
-        courses=courses,
+        progress=course_progress,
         text=text
     )
 
@@ -198,7 +247,7 @@ def dashboard():
 # SUBJECTS
 # =========================
 
-@app.route("/subjects", methods=["GET", "POST"])
+@app.route("/subjects")
 def subjects():
 
     if "user" not in session:
@@ -206,23 +255,9 @@ def subjects():
 
     text = get_text()
 
-    subject_list = [
-        "Math",
-        "Science",
-        "Programming",
-        "Spanish",
-        "Business",
-        "AI",
-        "History"
-    ]
-
-    if request.method == "POST":
-        subject = request.form.get("subject")
-        return redirect(f"/course/{subject}")
-
     return render_template(
         "subjects.html",
-        subjects=subject_list,
+        courses=COURSES,
         text=text
     )
 
@@ -238,20 +273,7 @@ def course(subject):
 
     text = get_text()
 
-    lessons = [
-        {
-            "title": f"Introduction to {subject}",
-            "content": f"Learn the basics of {subject}."
-        },
-        {
-            "title": f"Intermediate {subject}",
-            "content": f"Build deeper understanding of {subject}."
-        },
-        {
-            "title": f"Advanced {subject}",
-            "content": f"Master advanced concepts in {subject}."
-        }
-    ]
+    lessons = COURSES.get(subject, [])
 
     return render_template(
         "course.html",
@@ -278,17 +300,25 @@ def learn(subject):
 
         question = request.form.get("question")
 
-        # Fallback AI system
+        # FALLBACK AI SYSTEM
         ai_response = f"""
-        SkillBridge AI Tutor:
+SkillBridge AI Tutor
 
-        You asked about:
-        '{question}'
+Subject: {subject}
 
-        Here is a smart explanation for {subject}.
+Question:
+{question}
 
-        This fallback tutor works even without OpenAI credits.
-        """
+Answer:
+This is SkillBridge smart fallback AI mode.
+
+Your AI credits are currently unavailable,
+but the tutor system still works without crashing.
+
+Suggested next step:
+Continue practicing {subject} fundamentals and
+review the lesson modules carefully.
+"""
 
     return render_template(
         "learn.html",
@@ -298,7 +328,7 @@ def learn(subject):
     )
 
 # =========================
-# LANGUAGE TOGGLE
+# LANGUAGE SWITCHER
 # =========================
 
 @app.route("/set_language/<language>")

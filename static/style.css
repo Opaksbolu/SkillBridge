@@ -5,31 +5,39 @@ body{
     color:white;
 }
 
-nav{
-    background:#111827;
-    padding:20px;
+.navbar{
     display:flex;
     justify-content:space-between;
     align-items:center;
+    padding:20px;
+    background:#111827;
+    position:sticky;
+    top:0;
 }
 
-nav a{
-    color:white;
-    text-decoration:none;
-    margin-right:15px;
+.logo{
+    font-size:24px;
     font-weight:bold;
 }
 
-.container{
+.nav-links a,
+.languages a{
+    color:white;
+    text-decoration:none;
+    margin-left:15px;
+    font-weight:bold;
+}
+
+.page{
     padding:40px;
 }
 
 .card{
     background:#1e293b;
     padding:25px;
-    border-radius:15px;
+    border-radius:18px;
     margin-bottom:20px;
-    box-shadow:0px 4px 15px rgba(0,0,0,0.3);
+    box-shadow:0 4px 15px rgba(0,0,0,0.3);
 }
 
 button{
@@ -54,33 +62,37 @@ input{
     border:none;
 }
 
-.language-switch a{
-    background:#2563eb;
-    padding:8px 12px;
-    border-radius:8px;
-}
-
 .progress-bar{
+    width:100%;
     background:#334155;
+    height:20px;
     border-radius:10px;
     overflow:hidden;
-    height:20px;
 }
 
-.progress{
-    background:#22c55e;
+.progress-fill{
     height:20px;
+    background:#22c55e;
+}
+
+.hero{
+    text-align:center;
+    padding:100px 20px;
+}
+
+.hero h1{
+    font-size:60px;
 }
 
 @media(max-width:768px){
 
-    .container{
-        padding:20px;
-    }
-
-    nav{
+    .navbar{
         flex-direction:column;
         gap:15px;
+    }
+
+    .hero h1{
+        font-size:40px;
     }
 
 }

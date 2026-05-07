@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>SkillBridge</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="logo">
+        SkillBridge
+    </div>
+
+    <div class="nav-links">
+
+        <a href="/dashboard">{{ text.dashboard }}</a>
+
+        <a href="/subjects">{{ text.subjects }}</a>
+
+        <a href="/logout">{{ text.logout }}</a>
+
+    </div>
+
+    <div class="languages">
+
+        <a href="/set_language/English">EN</a>
+
+        <a href="/set_language/Spanish">ES</a>
+
+        <a href="/set_language/French">FR</a>
+
+    </div>
+
+</nav>
+
+<div class="page">
+
+    {% block content %}
+
+    {% endblock %}
+
+</div>
+
+</body>
+</html>
