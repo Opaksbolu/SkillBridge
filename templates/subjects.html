@@ -1,24 +1,35 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Select Subject</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+{% extends "base.html" %}
 
-<h2>Select a Subject</h2>
+{% block content %}
 
-<form method="POST">
+<h1>{{ text.subjects }}</h1>
 
-    <button name="subject" value="Math">Math</button>
+<div class="dashboard-grid">
 
-    <button name="subject" value="English">English</button>
+    {% for subject in ["Math", "Science", "Programming"] %}
 
-    <button name="subject" value="Python">Python</button>
+    <div class="card">
 
-</form>
+        <h2>{{ subject }}</h2>
 
-<a href="/logout">Logout</a>
+        <form method="POST">
 
-</body>
-</html>
+            <input
+                type="hidden"
+                name="subject"
+                value="{{ subject }}"
+            >
+
+            <button type="submit">
+                {{ text.start }}
+            </button>
+
+        </form>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

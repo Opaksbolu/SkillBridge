@@ -1,74 +1,137 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
+import os
+
+# OPTIONAL AI
+try:
+    from openai import OpenAI
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+except:
+    client = None
 
 app = Flask(__name__)
-app.secret_key = "skillbridge_secret"
+app.secret_key = "skillbridge_secret_key"
 
-DATABASE = "users.db"
-
-
-# ---------------- DATABASE ---------------- #
+# -------------------------
+# DATABASE
+# -------------------------
 
 def init_db():
-    conn = sqlite3.connect(DATABASE)
-    db = conn.cursor()
+    conn = sqlite3.connect("users.db")
+    cursor = conn.cursor()
 
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            password TEXT
-        )
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        language TEXT DEFAULT 'English'
+    )
     """)
 
     conn.commit()
     conn.close()
 
-
 init_db()
 
+# -------------------------
+# LANGUAGES
+# -------------------------
 
-# ---------------- COURSE DATA ---------------- #
+LANGUAGES = {
+    "English": {
+        "welcome": "Welcome",
+        "dashboard": "Dashboard",
+        "subjects": "Subjects",
+        "logout": "Logout",
+        "start": "Start Learning",
+    },
 
-courses = {
-    "Math": [
-        "Algebra",
-        "Geometry",
-        "Statistics",
-        "Trigonometry"
-    ],
+    "Spanish": {
+        "welcome": "Bienvenido",
+        "dashboard": "Panel",
+        "subjects": "Materias",
+        "logout": "Cerrar sesión",
+        "start": "Comenzar",
+    },
 
-    "Science": [
-        "Biology",
-        "Chemistry",
-        "Physics",
-        "Earth Science"
-    ],
-
-    "Programming": [
-        "Python",
-        "HTML & CSS",
-        "JavaScript",
-        "Flask"
-    ],
-
-    "Spanish": [
-        "Greetings",
-        "Numbers",
-        "Conversations",
-        "Vocabulary"
-    ]
+    "French": {
+        "welcome": "Bienvenue",
+        "dashboard": "Tableau de bord",
+        "subjects": "Sujets",
+        "logout": "Déconnexion",
+        "start": "Commencer",
+    }
 }
 
+# -------------------------
+# COURSE DATA
+# -------------------------
 
-# ---------------- HOME ---------------- #
+COURSES = {
+    "Math": {
+        "Algebra": [
+            "Variables",
+            "Equations",
+            "Functions",
+            "Practice Problems"
+        ],
+
+        "Geometry": [
+            "Angles",
+            "Triangles",
+            "Circles"
+        ]
+    },
+
+    "Science": {
+        "Biology": [
+            "Cells",
+            "DNA",
+            "Evolution"
+        ],
+
+        "Physics": [
+            "Motion",
+            "Force",
+            "Energy"
+        ]
+    },
+
+    "Programming": {
+        "Python Basics": [
+            "Variables",
+            "Loops",
+            "Functions",
+            "Mini Project"
+        ],
+
+        "Web Development": [
+            "HTML",
+            "CSS",
+            "Flask"
+        ]
+    }
+}
+
+# -------------------------
+# HOME
+# -------------------------
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    language = session.get("language", "English")
+    text = LANGUAGES[language]
 
+    return render_template(
+        "index.html",
+        text=text,
+        language=language
+    )
 
-# ---------------- REGISTER ---------------- #
+# -------------------------
+# REGISTER
+# -------------------------
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -78,23 +141,30 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = sqlite3.connect(DATABASE)
-        db = conn.cursor()
+        conn = sqlite3.connect("users.db")
+        cursor = conn.cursor()
 
-        db.execute(
-            "INSERT INTO users (username, password) VALUES (?, ?)",
-            (username, password)
-        )
+        try:
+            cursor.execute(
+                "INSERT INTO users (username, password) VALUES (?, ?)",
+                (username, password)
+            )
 
-        conn.commit()
-        conn.close()
+            conn.commit()
 
-        return redirect("/login")
+            return redirect("/login")
+
+        except:
+            return render_template(
+                "register.html",
+                error="User already exists"
+            )
 
     return render_template("register.html")
 
-
-# ---------------- LOGIN ---------------- #
+# -------------------------
+# LOGIN
+# -------------------------
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -104,19 +174,23 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = sqlite3.connect(DATABASE)
-        db = conn.cursor()
+        conn = sqlite3.connect("users.db")
+        cursor = conn.cursor()
 
-        user = db.execute(
+        cursor.execute(
             "SELECT * FROM users WHERE username=? AND password=?",
             (username, password)
-        ).fetchone()
+        )
+
+        user = cursor.fetchone()
 
         conn.close()
 
         if user:
+
             session["user"] = username
-            return redirect("/subjects")
+
+            return redirect("/dashboard")
 
         return render_template(
             "login.html",
@@ -125,8 +199,29 @@ def login():
 
     return render_template("login.html")
 
+# -------------------------
+# DASHBOARD
+# -------------------------
 
-# ---------------- SUBJECTS ---------------- #
+@app.route("/dashboard")
+def dashboard():
+
+    if "user" not in session:
+        return redirect("/login")
+
+    language = session.get("language", "English")
+    text = LANGUAGES[language]
+
+    return render_template(
+        "dashboard.html",
+        user=session["user"],
+        text=text,
+        language=language
+    )
+
+# -------------------------
+# SUBJECTS
+# -------------------------
 
 @app.route("/subjects", methods=["GET", "POST"])
 def subjects():
@@ -138,20 +233,20 @@ def subjects():
 
         subject = request.form.get("subject")
 
-        return redirect(
-            url_for(
-                "course",
-                subject=subject
-            )
-        )
+        return redirect(f"/course/{subject}")
+
+    language = session.get("language", "English")
+    text = LANGUAGES[language]
 
     return render_template(
         "subjects.html",
-        subjects=courses.keys()
+        text=text,
+        language=language
     )
 
-
-# ---------------- COURSE PAGE ---------------- #
+# -------------------------
+# COURSE PAGE
+# -------------------------
 
 @app.route("/course/<subject>")
 def course(subject):
@@ -159,55 +254,104 @@ def course(subject):
     if "user" not in session:
         return redirect("/login")
 
-    lessons = courses.get(subject, [])
+    lessons = COURSES.get(subject, {})
+
+    language = session.get("language", "English")
+    text = LANGUAGES[language]
 
     return render_template(
         "course.html",
         subject=subject,
-        lessons=lessons
+        lessons=lessons,
+        text=text,
+        language=language
     )
 
-
-# ---------------- LEARN PAGE ---------------- #
+# -------------------------
+# AI LEARN PAGE
+# -------------------------
 
 @app.route("/learn/<subject>", methods=["GET", "POST"])
 def learn(subject):
 
-    if "user" not in session:
-        return redirect("/login")
-
-    ai_response = None
+    response = ""
 
     if request.method == "POST":
 
         question = request.form.get("question")
 
-        ai_response = f"""
-AI Tutor is temporarily offline.
+        if client:
 
-Question:
-{question}
+            try:
 
-Recommended Study Tip:
-Focus on practicing one concept at a time in {subject}.
+                ai = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": f"You are a tutor for {subject}"
+                        },
+                        {
+                            "role": "user",
+                            "content": question
+                        }
+                    ]
+                )
+
+                response = ai.choices[0].message.content
+
+            except:
+
+                response = f"""
+AI temporarily unavailable.
+
+Helpful explanation for {subject}:
+
+Focus on practicing daily and mastering the fundamentals.
 """
+
+        else:
+
+            response = f"""
+AI not connected yet.
+
+This is fallback learning mode for {subject}.
+"""
+
+    language = session.get("language", "English")
+    text = LANGUAGES[language]
 
     return render_template(
         "learn.html",
         subject=subject,
-        ai_response=ai_response
+        response=response,
+        text=text,
+        language=language
     )
 
+# -------------------------
+# LANGUAGE SWITCH
+# -------------------------
 
-# ---------------- LOGOUT ---------------- #
+@app.route("/set_language/<language>")
+def set_language(language):
+
+    session["language"] = language
+
+    return redirect(request.referrer or "/")
+
+# -------------------------
+# LOGOUT
+# -------------------------
 
 @app.route("/logout")
 def logout():
+
     session.clear()
+
     return redirect("/")
 
-
-# ---------------- RUN APP ---------------- #
+# -------------------------
 
 if __name__ == "__main__":
     app.run(debug=True)

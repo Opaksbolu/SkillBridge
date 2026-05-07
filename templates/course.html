@@ -1,42 +1,29 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
 
-<head>
-    <title>{{ subject }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+{% block content %}
 
-<body>
+<h1>{{ subject }}</h1>
 
-<div class="container">
+{% for module, lesson_list in lessons.items() %}
 
-    <a href="/subjects" class="back-btn">← Back</a>
+<div class="card">
 
-    <h1>{{ subject }}</h1>
+    <h2>{{ module }}</h2>
 
-    <div class="lesson-grid">
+    <ul>
 
-        {% for lesson in lessons %}
-
-        <div class="lesson-card">
-
-            <h2>{{ lesson }}</h2>
-
-            <p>
-                Improve your understanding and build real skills.
-            </p>
-
-            <a href="/learn/{{ subject }}">
-                Start Learning
-            </a>
-
-        </div>
-
+        {% for lesson in lesson_list %}
+            <li>{{ lesson }}</li>
         {% endfor %}
 
-    </div>
+    </ul>
 
 </div>
 
-</body>
-</html>
+{% endfor %}
+
+<a href="/learn/{{ subject }}">
+    <button>Open AI Tutor</button>
+</a>
+
+{% endblock %}

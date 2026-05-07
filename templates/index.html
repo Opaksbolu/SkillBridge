@@ -1,22 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>SkillBridge</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <div class="container">
+{% extends "base.html" %}
 
-    <div class="card">
+{% block content %}
 
-        <h1>SkillBridge</h1>
+<div class="hero">
 
-        <a href="/login"><button>Login</button></a>
+    <h1>SkillBridge</h1>
 
-        <a href="/register"><button>Register</button></a>
+    <p>
+        AI-powered learning platform for modern students.
+    </p>
 
-    </div>
+    <a href="/login">
+        <button>Login</button>
+    </a>
+
+    <a href="/register">
+        <button>Register</button>
+    </a>
 
 </div>
-</body>
-</html>
+
+{% endblock %}

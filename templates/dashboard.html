@@ -1,26 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
+{% extends "base.html" %}
 
-<h2>Dashboard</h2>
+{% block content %}
 
-<p>Subject: {{ subject }}</p>
+<h1>
+    {{ text.welcome }}, {{ user }}
+</h1>
 
-<p>Language: {{ language }}</p>
+<div class="dashboard-grid">
 
-<a href="/learn/{{ subject }}">Start Learning</a>
+    <div class="card">
+        <h2>Subjects</h2>
+        <p>Explore learning paths.</p>
 
-<br><br>
+        <a href="/subjects">
+            <button>Open</button>
+        </a>
+    </div>
 
-<a href="/subjects">⬅ Back to Subjects</a>
+    <div class="card">
+        <h2>AI Tutor</h2>
+        <p>Ask questions and learn faster.</p>
 
-<br>
+        <a href="/learn/Programming">
+            <button>Start</button>
+        </a>
+    </div>
 
-<a href="/logout">Logout</a>
+</div>
 
-</body>
-</html>
+{% endblock %}

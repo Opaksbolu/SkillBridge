@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SkillBridge</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="logo">
+        SkillBridge
+    </div>
+
+    <div class="nav-links">
+
+        <a href="/">Home</a>
+
+        {% if session.get("user") %}
+            <a href="/dashboard">{{ text.dashboard }}</a>
+            <a href="/subjects">{{ text.subjects }}</a>
+            <a href="/logout">{{ text.logout }}</a>
+        {% endif %}
+
+        <a href="/set_language/English">EN</a>
+        <a href="/set_language/Spanish">ES</a>
+        <a href="/set_language/French">FR</a>
+
+    </div>
+
+</nav>
+
+<div class="page-content">
+
+{% block content %}
+{% endblock %}
+
+</div>
+
+</body>
+</html>
