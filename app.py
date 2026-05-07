@@ -3,119 +3,75 @@ import sqlite3
 import os
 
 app = Flask(__name__)
-app.secret_key = "skillbridge-secret-key"
+app.secret_key = "skillbridge_secret_key"
 
-# -------------------------
+DATABASE = "users.db"
+
+
+# -----------------------------
 # DATABASE SETUP
-# -------------------------
-
+# -----------------------------
 def init_db():
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DATABASE)
     db = conn.cursor()
 
     db.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        password TEXT,
-        language TEXT
+        username TEXT NOT NULL,
+        password TEXT NOT NULL
     )
     """)
 
     conn.commit()
     conn.close()
 
+
 init_db()
 
-# -------------------------
-# LANGUAGE SYSTEM
-# -------------------------
 
-translations = {
-    "English": {
-        "welcome": "Welcome to SkillBridge",
-        "subtitle": "AI-Powered Learning Platform",
-        "login": "Login",
-        "register": "Register",
-        "subjects": "Choose Your Subject",
-        "dashboard": "Dashboard",
-        "logout": "Logout",
-    },
-
-    "Spanish": {
-        "welcome": "Bienvenido a SkillBridge",
-        "subtitle": "Plataforma de aprendizaje con IA",
-        "login": "Iniciar sesión",
-        "register": "Registrarse",
-        "subjects": "Elige tu materia",
-        "dashboard": "Panel",
-        "logout": "Cerrar sesión",
-    },
-
-    "French": {
-        "welcome": "Bienvenue sur SkillBridge",
-        "subtitle": "Plateforme d'apprentissage IA",
-        "login": "Connexion",
-        "register": "S'inscrire",
-        "subjects": "Choisissez votre sujet",
-        "dashboard": "Tableau de bord",
-        "logout": "Déconnexion",
-    }
-}
-
-# -------------------------
-# COURSE DATA
-# -------------------------
-
+# -----------------------------
+# COURSE CONTENT
+# -----------------------------
 courses = {
     "Math": [
         "Algebra Basics",
-        "Linear Equations",
-        "Functions",
-        "Graphing",
-        "Geometry"
+        "Fractions",
+        "Geometry",
+        "Statistics"
     ],
-
     "Science": [
-        "Cells and Biology",
-        "Forces and Motion",
-        "Chemistry Basics",
-        "Atoms",
-        "Energy"
+        "Biology",
+        "Chemistry",
+        "Physics",
+        "Earth Science"
     ],
-
     "Programming": [
         "Python Basics",
-        "Variables",
-        "Loops",
-        "Functions",
-        "Flask Intro"
+        "HTML & CSS",
+        "JavaScript",
+        "Flask Development"
     ],
-
     "Spanish": [
         "Greetings",
         "Numbers",
-        "Conversation",
-        "Grammar",
-        "Vocabulary"
+        "Common Phrases",
+        "Conversations"
     ]
 }
 
-# -------------------------
-# HOME
-# -------------------------
 
+# -----------------------------
+# HOME
+# -----------------------------
 @app.route("/")
 def home():
-    language = session.get("language", "English")
-    text = translations[language]
+    return render_template("index.html")
 
-    return render_template("index.html", text=text)
 
-# -------------------------
+# -----------------------------
 # REGISTER
-# -------------------------
-
+# -----------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
@@ -123,14 +79,19 @@ def register():
 
         username = request.form.get("username")
         password = request.form.get("password")
-        language = request.form.get("language")
 
-        conn = sqlite3.connect("users.db")
+        if not username or not password:
+            return render_template(
+                "register.html",
+                error="Please fill all fields"
+            )
+
+        conn = sqlite3.connect(DATABASE)
         db = conn.cursor()
 
         db.execute(
-            "INSERT INTO users (username, password, language) VALUES (?, ?, ?)",
-            (username, password, language)
+            "INSERT INTO users (username, password) VALUES (?, ?)",
+            (username, password)
         )
 
         conn.commit()
@@ -140,10 +101,10 @@ def register():
 
     return render_template("register.html")
 
-# -------------------------
-# LOGIN
-# -------------------------
 
+# -----------------------------
+# LOGIN
+# -----------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
@@ -152,8 +113,7 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = sqlite3.connect("users.db")
-        conn.row_factory = sqlite3.Row
+        conn = sqlite3.connect(DATABASE)
         db = conn.cursor()
 
         user = db.execute(
@@ -164,10 +124,7 @@ def login():
         conn.close()
 
         if user:
-
-            session["username"] = user["username"]
-            session["language"] = user["language"]
-
+            session["user"] = username
             return redirect("/subjects")
 
         return render_template(
@@ -177,38 +134,48 @@ def login():
 
     return render_template("login.html")
 
-# -------------------------
-# SUBJECTS
-# -------------------------
 
+# -----------------------------
+# LOGOUT
+# -----------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+
+# -----------------------------
+# SUBJECT SELECTION
+# -----------------------------
 @app.route("/subjects", methods=["GET", "POST"])
 def subjects():
 
-    if "username" not in session:
+    if "user" not in session:
         return redirect("/login")
 
     if request.method == "POST":
 
         subject = request.form.get("subject")
 
-        return redirect(f"/course/{subject}")
+        if subject:
+            return redirect(url_for("course", subject=subject))
 
     return render_template(
         "subjects.html",
         subjects=courses.keys()
     )
 
-# -------------------------
-# COURSE PAGE
-# -------------------------
 
+# -----------------------------
+# COURSE PAGE
+# -----------------------------
 @app.route("/course/<subject>")
 def course(subject):
 
-    if subject not in courses:
-        return redirect("/subjects")
+    if "user" not in session:
+        return redirect("/login")
 
-    lessons = courses[subject]
+    lessons = courses.get(subject, [])
 
     return render_template(
         "course.html",
@@ -216,51 +183,41 @@ def course(subject):
         lessons=lessons
     )
 
-# -------------------------
-# DASHBOARD
-# -------------------------
 
-@app.route("/dashboard")
-def dashboard():
+# -----------------------------
+# AI LEARN PAGE (SAFE FALLBACK)
+# -----------------------------
+@app.route("/learn/<subject>", methods=["GET", "POST"])
+def learn(subject):
 
-    if "username" not in session:
+    if "user" not in session:
         return redirect("/login")
 
-    language = session.get("language", "English")
-    text = translations[language]
+    ai_response = None
+
+    if request.method == "POST":
+
+        question = request.form.get("question")
+
+        ai_response = f"""
+        AI Tutor is temporarily offline.
+
+        Your question:
+        "{question}"
+
+        Suggested learning tip:
+        Practice consistently and focus on understanding the fundamentals of {subject}.
+        """
 
     return render_template(
-        "dashboard.html",
-        username=session["username"],
-        text=text
+        "learn.html",
+        subject=subject,
+        ai_response=ai_response
     )
 
-# -------------------------
-# LANGUAGE TOGGLE
-# -------------------------
 
-@app.route("/change_language/<language>")
-def change_language(language):
-
-    if language in translations:
-        session["language"] = language
-
-    return redirect(request.referrer or "/")
-
-# -------------------------
-# LOGOUT
-# -------------------------
-
-@app.route("/logout")
-def logout():
-
-    session.clear()
-
-    return redirect("/")
-
-# -------------------------
+# -----------------------------
 # RUN APP
-# -------------------------
-
+# -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)

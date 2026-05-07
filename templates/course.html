@@ -1,25 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ subject }}</title>
+    <title>{{ subject }} Course</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
 
 <div class="container">
 
-    <div class="topbar">
-        <a href="/subjects">← Back</a>
+    <h1>{{ subject }} Course</h1>
 
-        <div>
-            <a href="/change_language/English">EN</a>
-            <a href="/change_language/Spanish">ES</a>
-            <a href="/change_language/French">FR</a>
-        </div>
-    </div>
-
-    <h1>{{ subject }}</h1>
+    <a href="/subjects" class="back-btn">← Back to Subjects</a>
 
     <div class="lesson-grid">
 
@@ -29,11 +20,12 @@
             <h2>{{ lesson }}</h2>
 
             <p>
-                Learn important concepts in {{ subject }}
-                with SkillBridge AI tutoring.
+                Learn important concepts and improve your skills.
             </p>
 
-            <button>Start Lesson</button>
+            <a href="/learn/{{ subject }}">
+                Start Learning
+            </a>
         </div>
 
         {% endfor %}
