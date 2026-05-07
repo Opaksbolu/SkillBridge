@@ -1,32 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ subject }} Course</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>{{ subject }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
-    <div class="container">
-        <h1>{{ subject }} Course</h1>
+<div class="container">
 
-        <p>Select a lesson to start learning:</p>
+    <div class="topbar">
+        <a href="/subjects">← Back</a>
 
-        <div class="lessons">
-            {% for lesson in lessons %}
-                <div class="lesson-card">
-                    <h3>{{ lesson }}</h3>
-                    <a href="/learn/{{ subject }}">Start Lesson</a>
-                </div>
-            {% endfor %}
+        <div>
+            <a href="/change_language/English">EN</a>
+            <a href="/change_language/Spanish">ES</a>
+            <a href="/change_language/French">FR</a>
+        </div>
+    </div>
+
+    <h1>{{ subject }}</h1>
+
+    <div class="lesson-grid">
+
+        {% for lesson in lessons %}
+
+        <div class="lesson-card">
+            <h2>{{ lesson }}</h2>
+
+            <p>
+                Learn important concepts in {{ subject }}
+                with SkillBridge AI tutoring.
+            </p>
+
+            <button>Start Lesson</button>
         </div>
 
-        <br>
-
-        <a href="/dashboard">⬅ Back to Dashboard</a>
-        <br>
-        <a href="/subjects">🔁 Change Subject</a>
+        {% endfor %}
 
     </div>
+
+</div>
 
 </body>
 </html>

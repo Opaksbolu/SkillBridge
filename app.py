@@ -1,166 +1,266 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
+import os
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = "skillbridge-secret-key"
 
+# -------------------------
+# DATABASE SETUP
+# -------------------------
 
-def get_db():
-    return sqlite3.connect("users.db")
-
-
-# 🔹 CREATE DATABASE (RUN ONCE)
 def init_db():
-    db = get_db()
+    conn = sqlite3.connect("users.db")
+    db = conn.cursor()
+
     db.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE,
+        username TEXT,
         password TEXT,
         language TEXT
     )
     """)
-    db.commit()
 
+    conn.commit()
+    conn.close()
 
 init_db()
 
+# -------------------------
+# LANGUAGE SYSTEM
+# -------------------------
+
+translations = {
+    "English": {
+        "welcome": "Welcome to SkillBridge",
+        "subtitle": "AI-Powered Learning Platform",
+        "login": "Login",
+        "register": "Register",
+        "subjects": "Choose Your Subject",
+        "dashboard": "Dashboard",
+        "logout": "Logout",
+    },
+
+    "Spanish": {
+        "welcome": "Bienvenido a SkillBridge",
+        "subtitle": "Plataforma de aprendizaje con IA",
+        "login": "Iniciar sesión",
+        "register": "Registrarse",
+        "subjects": "Elige tu materia",
+        "dashboard": "Panel",
+        "logout": "Cerrar sesión",
+    },
+
+    "French": {
+        "welcome": "Bienvenue sur SkillBridge",
+        "subtitle": "Plateforme d'apprentissage IA",
+        "login": "Connexion",
+        "register": "S'inscrire",
+        "subjects": "Choisissez votre sujet",
+        "dashboard": "Tableau de bord",
+        "logout": "Déconnexion",
+    }
+}
+
+# -------------------------
+# COURSE DATA
+# -------------------------
+
+courses = {
+    "Math": [
+        "Algebra Basics",
+        "Linear Equations",
+        "Functions",
+        "Graphing",
+        "Geometry"
+    ],
+
+    "Science": [
+        "Cells and Biology",
+        "Forces and Motion",
+        "Chemistry Basics",
+        "Atoms",
+        "Energy"
+    ],
+
+    "Programming": [
+        "Python Basics",
+        "Variables",
+        "Loops",
+        "Functions",
+        "Flask Intro"
+    ],
+
+    "Spanish": [
+        "Greetings",
+        "Numbers",
+        "Conversation",
+        "Grammar",
+        "Vocabulary"
+    ]
+}
+
+# -------------------------
+# HOME
+# -------------------------
 
 @app.route("/")
-def index():
-    return render_template("index.html")
+def home():
+    language = session.get("language", "English")
+    text = translations[language]
 
+    return render_template("index.html", text=text)
 
-# ======================
+# -------------------------
 # REGISTER
-# ======================
+# -------------------------
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
+
     if request.method == "POST":
-        email = request.form.get("email")
+
+        username = request.form.get("username")
         password = request.form.get("password")
         language = request.form.get("language")
 
-        db = get_db()
-        try:
-            db.execute(
-                "INSERT INTO users (email, password, language) VALUES (?, ?, ?)",
-                (email, password, language)
-            )
-            db.commit()
-        except:
-            return "User already exists"
+        conn = sqlite3.connect("users.db")
+        db = conn.cursor()
+
+        db.execute(
+            "INSERT INTO users (username, password, language) VALUES (?, ?, ?)",
+            (username, password, language)
+        )
+
+        conn.commit()
+        conn.close()
 
         return redirect("/login")
 
     return render_template("register.html")
 
-
-# ======================
+# -------------------------
 # LOGIN
-# ======================
+# -------------------------
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
     if request.method == "POST":
-        email = request.form.get("email")
+
+        username = request.form.get("username")
         password = request.form.get("password")
 
-        db = get_db()
+        conn = sqlite3.connect("users.db")
+        conn.row_factory = sqlite3.Row
+        db = conn.cursor()
+
         user = db.execute(
-            "SELECT * FROM users WHERE email=? AND password=?",
-            (email, password)
+            "SELECT * FROM users WHERE username=? AND password=?",
+            (username, password)
         ).fetchone()
 
+        conn.close()
+
         if user:
-            session["user"] = user[1]
-            session["language"] = user[3]
+
+            session["username"] = user["username"]
+            session["language"] = user["language"]
+
             return redirect("/subjects")
-        else:
-            return render_template("login.html", error="Invalid login")
+
+        return render_template(
+            "login.html",
+            error="Invalid login"
+        )
 
     return render_template("login.html")
 
+# -------------------------
+# SUBJECTS
+# -------------------------
 
-# ======================
-# SUBJECT SELECTION
-# ======================
 @app.route("/subjects", methods=["GET", "POST"])
 def subjects():
-    if "user" not in session:
+
+    if "username" not in session:
         return redirect("/login")
 
     if request.method == "POST":
+
         subject = request.form.get("subject")
-        session["subject"] = subject
-        return redirect("/dashboard")
 
-    return render_template("subjects.html")
-
-
-# ======================
-# DASHBOARD
-# ======================
-@app.route("/dashboard")
-def dashboard():
-    if "user" not in session:
-        return redirect("/login")
+        return redirect(f"/course/{subject}")
 
     return render_template(
-        "dashboard.html",
-        subject=session.get("subject"),
-        language=session.get("language")
+        "subjects.html",
+        subjects=courses.keys()
     )
 
-
-# ======================
-# LEARN PAGE (AI SAFE MODE)
-# ======================
-@app.route("/learn/<subject>", methods=["GET", "POST"])
-def learn(subject):
-    if "user" not in session:
-        return redirect("/login")
-
-    ai_response = None
-
-    if request.method == "POST":
-        user_input = request.form.get("question")
-
-        # 🔹 SAFE fallback AI (no API needed)
-        ai_response = f"""
-        Here’s a simple explanation of {subject}:
-
-        {subject} is an important topic. Start with basics,
-        practice daily, and build projects.
-
-        Your question: {user_input}
-        """
-
-    return render_template(
-        "learn.html",
-        subject=subject,
-        ai_response=ai_response
-    )
-
+# -------------------------
+# COURSE PAGE
+# -------------------------
 
 @app.route("/course/<subject>")
 def course(subject):
-    if "user" not in session:
+
+    if subject not in courses:
+        return redirect("/subjects")
+
+    lessons = courses[subject]
+
+    return render_template(
+        "course.html",
+        subject=subject,
+        lessons=lessons
+    )
+
+# -------------------------
+# DASHBOARD
+# -------------------------
+
+@app.route("/dashboard")
+def dashboard():
+
+    if "username" not in session:
         return redirect("/login")
 
-    lessons = [
-        f"Introduction to {subject}",
-        f"{subject} Basics",
-        f"Intermediate {subject}",
-        f"Advanced {subject}"
-    ]
+    language = session.get("language", "English")
+    text = translations[language]
 
-    return render_template("course.html", subject=subject, lessons=lessons)
+    return render_template(
+        "dashboard.html",
+        username=session["username"],
+        text=text
+    )
 
+# -------------------------
+# LANGUAGE TOGGLE
+# -------------------------
 
-# ======================
+@app.route("/change_language/<language>")
+def change_language(language):
+
+    if language in translations:
+        session["language"] = language
+
+    return redirect(request.referrer or "/")
+
+# -------------------------
 # LOGOUT
-# ======================
+# -------------------------
+
 @app.route("/logout")
 def logout():
+
     session.clear()
+
     return redirect("/")
+
+# -------------------------
+# RUN APP
+# -------------------------
+
+if __name__ == "__main__":
+    app.run(debug=True)
