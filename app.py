@@ -2,30 +2,24 @@ from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 import os
 
-# OPTIONAL AI
-try:
-    from openai import OpenAI
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-except:
-    client = None
-
 app = Flask(__name__)
-app.secret_key = "skillbridge_secret_key"
+app.secret_key = "skillbridge_secret"
 
-# -------------------------
+DATABASE = "users.db"
+
+# =========================
 # DATABASE
-# -------------------------
+# =========================
 
 def init_db():
-    conn = sqlite3.connect("users.db")
+    conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        language TEXT DEFAULT 'English'
+        username TEXT UNIQUE,
+        password TEXT
     )
     """)
 
@@ -34,114 +28,74 @@ def init_db():
 
 init_db()
 
-# -------------------------
-# LANGUAGES
-# -------------------------
+# =========================
+# LANGUAGE SYSTEM
+# =========================
 
-LANGUAGES = {
+translations = {
     "English": {
-        "welcome": "Welcome",
+        "welcome": "Welcome to SkillBridge",
+        "login": "Login",
+        "register": "Register",
         "dashboard": "Dashboard",
         "subjects": "Subjects",
         "logout": "Logout",
-        "start": "Start Learning",
+        "start_learning": "Start Learning",
+        "choose_subject": "Choose a Subject",
+        "ai_tutor": "AI Tutor",
     },
 
     "Spanish": {
-        "welcome": "Bienvenido",
+        "welcome": "Bienvenido a SkillBridge",
+        "login": "Iniciar sesión",
+        "register": "Registrarse",
         "dashboard": "Panel",
         "subjects": "Materias",
         "logout": "Cerrar sesión",
-        "start": "Comenzar",
+        "start_learning": "Comenzar aprendizaje",
+        "choose_subject": "Elegir una materia",
+        "ai_tutor": "Tutor IA",
     },
 
     "French": {
-        "welcome": "Bienvenue",
+        "welcome": "Bienvenue sur SkillBridge",
+        "login": "Connexion",
+        "register": "S'inscrire",
         "dashboard": "Tableau de bord",
         "subjects": "Sujets",
         "logout": "Déconnexion",
-        "start": "Commencer",
+        "start_learning": "Commencer",
+        "choose_subject": "Choisir une matière",
+        "ai_tutor": "Tuteur IA",
     }
 }
 
-# -------------------------
-# COURSE DATA
-# -------------------------
+def get_text():
+    language = session.get("language", "English")
+    return translations.get(language, translations["English"])
 
-COURSES = {
-    "Math": {
-        "Algebra": [
-            "Variables",
-            "Equations",
-            "Functions",
-            "Practice Problems"
-        ],
-
-        "Geometry": [
-            "Angles",
-            "Triangles",
-            "Circles"
-        ]
-    },
-
-    "Science": {
-        "Biology": [
-            "Cells",
-            "DNA",
-            "Evolution"
-        ],
-
-        "Physics": [
-            "Motion",
-            "Force",
-            "Energy"
-        ]
-    },
-
-    "Programming": {
-        "Python Basics": [
-            "Variables",
-            "Loops",
-            "Functions",
-            "Mini Project"
-        ],
-
-        "Web Development": [
-            "HTML",
-            "CSS",
-            "Flask"
-        ]
-    }
-}
-
-# -------------------------
+# =========================
 # HOME
-# -------------------------
+# =========================
 
 @app.route("/")
 def home():
-    language = session.get("language", "English")
-    text = LANGUAGES[language]
+    text = get_text()
+    return render_template("index.html", text=text)
 
-    return render_template(
-        "index.html",
-        text=text,
-        language=language
-    )
-
-# -------------------------
+# =========================
 # REGISTER
-# -------------------------
+# =========================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    text = get_text()
 
     if request.method == "POST":
-
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = sqlite3.connect("users.db")
+        conn = sqlite3.connect(DATABASE)
         cursor = conn.cursor()
 
         try:
@@ -152,29 +106,33 @@ def register():
 
             conn.commit()
 
-            return redirect("/login")
-
         except:
             return render_template(
                 "register.html",
-                error="User already exists"
+                error="User already exists",
+                text=text
             )
 
-    return render_template("register.html")
+        conn.close()
 
-# -------------------------
+        return redirect("/login")
+
+    return render_template("register.html", text=text)
+
+# =========================
 # LOGIN
-# -------------------------
+# =========================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    text = get_text()
 
     if request.method == "POST":
 
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = sqlite3.connect("users.db")
+        conn = sqlite3.connect(DATABASE)
         cursor = conn.cursor()
 
         cursor.execute(
@@ -187,21 +145,20 @@ def login():
         conn.close()
 
         if user:
-
             session["user"] = username
-
             return redirect("/dashboard")
 
         return render_template(
             "login.html",
-            error="Invalid login"
+            error="Invalid login",
+            text=text
         )
 
-    return render_template("login.html")
+    return render_template("login.html", text=text)
 
-# -------------------------
+# =========================
 # DASHBOARD
-# -------------------------
+# =========================
 
 @app.route("/dashboard")
 def dashboard():
@@ -209,19 +166,37 @@ def dashboard():
     if "user" not in session:
         return redirect("/login")
 
-    language = session.get("language", "English")
-    text = LANGUAGES[language]
+    text = get_text()
+
+    courses = [
+        {
+            "name": "Math",
+            "progress": 40
+        },
+        {
+            "name": "Science",
+            "progress": 70
+        },
+        {
+            "name": "Programming",
+            "progress": 20
+        },
+        {
+            "name": "Spanish",
+            "progress": 90
+        }
+    ]
 
     return render_template(
         "dashboard.html",
         user=session["user"],
-        text=text,
-        language=language
+        courses=courses,
+        text=text
     )
 
-# -------------------------
+# =========================
 # SUBJECTS
-# -------------------------
+# =========================
 
 @app.route("/subjects", methods=["GET", "POST"])
 def subjects():
@@ -229,24 +204,31 @@ def subjects():
     if "user" not in session:
         return redirect("/login")
 
+    text = get_text()
+
+    subject_list = [
+        "Math",
+        "Science",
+        "Programming",
+        "Spanish",
+        "Business",
+        "AI",
+        "History"
+    ]
+
     if request.method == "POST":
-
         subject = request.form.get("subject")
-
         return redirect(f"/course/{subject}")
-
-    language = session.get("language", "English")
-    text = LANGUAGES[language]
 
     return render_template(
         "subjects.html",
-        text=text,
-        language=language
+        subjects=subject_list,
+        text=text
     )
 
-# -------------------------
+# =========================
 # COURSE PAGE
-# -------------------------
+# =========================
 
 @app.route("/course/<subject>")
 def course(subject):
@@ -254,84 +236,70 @@ def course(subject):
     if "user" not in session:
         return redirect("/login")
 
-    lessons = COURSES.get(subject, {})
+    text = get_text()
 
-    language = session.get("language", "English")
-    text = LANGUAGES[language]
+    lessons = [
+        {
+            "title": f"Introduction to {subject}",
+            "content": f"Learn the basics of {subject}."
+        },
+        {
+            "title": f"Intermediate {subject}",
+            "content": f"Build deeper understanding of {subject}."
+        },
+        {
+            "title": f"Advanced {subject}",
+            "content": f"Master advanced concepts in {subject}."
+        }
+    ]
 
     return render_template(
         "course.html",
         subject=subject,
         lessons=lessons,
-        text=text,
-        language=language
+        text=text
     )
 
-# -------------------------
+# =========================
 # AI LEARN PAGE
-# -------------------------
+# =========================
 
 @app.route("/learn/<subject>", methods=["GET", "POST"])
 def learn(subject):
 
-    response = ""
+    if "user" not in session:
+        return redirect("/login")
+
+    text = get_text()
+
+    ai_response = None
 
     if request.method == "POST":
 
         question = request.form.get("question")
 
-        if client:
+        # Fallback AI system
+        ai_response = f"""
+        SkillBridge AI Tutor:
 
-            try:
+        You asked about:
+        '{question}'
 
-                ai = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": f"You are a tutor for {subject}"
-                        },
-                        {
-                            "role": "user",
-                            "content": question
-                        }
-                    ]
-                )
+        Here is a smart explanation for {subject}.
 
-                response = ai.choices[0].message.content
-
-            except:
-
-                response = f"""
-AI temporarily unavailable.
-
-Helpful explanation for {subject}:
-
-Focus on practicing daily and mastering the fundamentals.
-"""
-
-        else:
-
-            response = f"""
-AI not connected yet.
-
-This is fallback learning mode for {subject}.
-"""
-
-    language = session.get("language", "English")
-    text = LANGUAGES[language]
+        This fallback tutor works even without OpenAI credits.
+        """
 
     return render_template(
         "learn.html",
         subject=subject,
-        response=response,
-        text=text,
-        language=language
+        ai_response=ai_response,
+        text=text
     )
 
-# -------------------------
-# LANGUAGE SWITCH
-# -------------------------
+# =========================
+# LANGUAGE TOGGLE
+# =========================
 
 @app.route("/set_language/<language>")
 def set_language(language):
@@ -340,9 +308,9 @@ def set_language(language):
 
     return redirect(request.referrer or "/")
 
-# -------------------------
+# =========================
 # LOGOUT
-# -------------------------
+# =========================
 
 @app.route("/logout")
 def logout():
@@ -351,7 +319,9 @@ def logout():
 
     return redirect("/")
 
-# -------------------------
+# =========================
+# MAIN
+# =========================
 
 if __name__ == "__main__":
     app.run(debug=True)

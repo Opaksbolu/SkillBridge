@@ -1,29 +1,41 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ subject }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
-{% block content %}
+<nav>
+    <a href="/dashboard">{{ text.dashboard }}</a>
+    <a href="/subjects">{{ text.subjects }}</a>
+    <a href="/logout">{{ text.logout }}</a>
 
-<h1>{{ subject }}</h1>
+    <div class="language-switch">
+        <a href="/set_language/English">EN</a>
+        <a href="/set_language/Spanish">ES</a>
+        <a href="/set_language/French">FR</a>
+    </div>
+</nav>
 
-{% for module, lesson_list in lessons.items() %}
+<div class="container">
 
-<div class="card">
+    <h1>{{ subject }}</h1>
 
-    <h2>{{ module }}</h2>
+    {% for lesson in lessons %}
 
-    <ul>
+    <div class="card">
+        <h2>{{ lesson.title }}</h2>
+        <p>{{ lesson.content }}</p>
 
-        {% for lesson in lesson_list %}
-            <li>{{ lesson }}</li>
-        {% endfor %}
+        <a href="/learn/{{ subject }}">
+            <button>{{ text.ai_tutor }}</button>
+        </a>
+    </div>
 
-    </ul>
+    {% endfor %}
 
 </div>
 
-{% endfor %}
-
-<a href="/learn/{{ subject }}">
-    <button>Open AI Tutor</button>
-</a>
-
-{% endblock %}
+</body>
+</html>
