@@ -1,8 +1,20 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect("/login")
+        return f(*args, **kwargs)
+    return decorated_function
+
 app.secret_key = "skillbridge_secret"
 
 # ---------------- DATABASE ---------------- #
@@ -92,6 +104,10 @@ def register():
             )
 
         hashed_password = generate_password_hash(password)
+        db.execute(
+    "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+    (username, email, hashed_password)
+)
 
         try:
 
@@ -168,6 +184,7 @@ def login():
 # ---------------- DASHBOARD ---------------- #
 
 @app.route("/dashboard")
+@login_required
 def dashboard():
 
     if "user" not in session:
@@ -181,6 +198,7 @@ def dashboard():
 # ---------------- SUBJECTS ---------------- #
 
 @app.route("/subjects")
+@login_required
 def subjects():
 
     if "user" not in session:
@@ -202,6 +220,7 @@ def subjects():
 # ---------------- COURSE ---------------- #
 
 @app.route("/course/<subject>")
+@login_required
 def course(subject):
 
     if "user" not in session:
@@ -224,6 +243,7 @@ def course(subject):
 # ---------------- LEARN ---------------- #
 
 @app.route("/learn/<subject>")
+@login_required
 def learn(subject):
 
     if "user" not in session:
@@ -237,6 +257,7 @@ def learn(subject):
 # ---------------- AI ---------------- #
 
 @app.route("/ai", methods=["POST"])
+@login_required
 def ai():
 
     if "user" not in session:
