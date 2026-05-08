@@ -1,35 +1,30 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Subjects</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
 
-{% block content %}
+<h1>Select a Subject</h1>
 
-<h1>{{ text.subjects }}</h1>
+<div class="subjects-grid">
 
-<div class="dashboard-grid">
+{% for subject in subjects %}
 
-    {% for subject in ["Math", "Science", "Programming"] %}
+<div class="card">
 
-    <div class="card">
+    <h2>{{ subject }}</h2>
 
-        <h2>{{ subject }}</h2>
-
-        <form method="POST">
-
-            <input
-                type="hidden"
-                name="subject"
-                value="{{ subject }}"
-            >
-
-            <button type="submit">
-                {{ text.start }}
-            </button>
-
-        </form>
-
-    </div>
-
-    {% endfor %}
+    <a href="/course/{{ subject }}">
+        <button>Open Course</button>
+    </a>
 
 </div>
 
-{% endblock %}
+{% endfor %}
+
+</div>
+
+</body>
+</html>

@@ -96,3 +96,65 @@ input{
     }
 
 }
+
+body{
+    margin:0;
+    font-family:Arial;
+    background:#050816;
+    color:white;
+}
+
+nav{
+    display:flex;
+    justify-content:space-between;
+    padding:20px 40px;
+    background:#0b1023;
+}
+
+nav a{
+    color:white;
+    text-decoration:none;
+    margin-left:20px;
+    font-weight:bold;
+}
+
+.hero{
+    padding:40px;
+}
+
+.card{
+    background:linear-gradient(135deg,#16213e,#1f4068);
+    padding:30px;
+    border-radius:20px;
+    margin-top:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+
+button{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:12px;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    margin-top:10px;
+}
+
+.subjects-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+    padding:40px;
+}

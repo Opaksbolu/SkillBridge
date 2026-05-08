@@ -1,37 +1,26 @@
-{% extends "base.html" %}
-
-{% block content %}
-
-<h1>{{ subject }} AI Tutor</h1>
-
-<div class="card">
-
-    <form method="POST">
-
-        <textarea
-            name="question"
-            placeholder="Ask anything..."
-            required
-        ></textarea>
-
-        <button type="submit">
-            Ask AI
-        </button>
-
-    </form>
-
-</div>
-
-{% if response %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Learn</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
 
 <div class="card">
 
-    <h2>Response</h2>
+<h1>{{ subject }}</h1>
 
-    <p>{{ response }}</p>
+<p>
+This is the learning page for {{ subject }}.
+You can now build full lessons,
+videos, quizzes, and AI tutoring here.
+</p>
+
+<a href="/dashboard">
+    <button>Back Dashboard</button>
+</a>
 
 </div>
 
-{% endif %}
-
-{% endblock %}
+</body>
+</html>

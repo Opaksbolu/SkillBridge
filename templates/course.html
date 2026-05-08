@@ -2,38 +2,25 @@
 <html>
 <head>
     <title>{{ subject }}</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<nav>
-    <a href="/dashboard">{{ text.dashboard }}</a>
-    <a href="/subjects">{{ text.subjects }}</a>
-    <a href="/logout">{{ text.logout }}</a>
+<h1>{{ subject }} Course</h1>
 
-    <div class="language-switch">
-        <a href="/set_language/English">EN</a>
-        <a href="/set_language/Spanish">ES</a>
-        <a href="/set_language/French">FR</a>
-    </div>
-</nav>
+<div class="subjects-grid">
 
-<div class="container">
+{% for lesson in lessons %}
 
-    <h1>{{ subject }}</h1>
+<div class="card">
+    <h2>{{ lesson }}</h2>
 
-    {% for lesson in lessons %}
+    <a href="/learn/{{ subject }}">
+        <button>Start Lesson</button>
+    </a>
+</div>
 
-    <div class="card">
-        <h2>{{ lesson.title }}</h2>
-        <p>{{ lesson.content }}</p>
-
-        <a href="/learn/{{ subject }}">
-            <button>{{ text.ai_tutor }}</button>
-        </a>
-    </div>
-
-    {% endfor %}
+{% endfor %}
 
 </div>
 

@@ -1,15 +1,32 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
 
-{% block content %}
+<nav>
+    <h1>SkillBridge</h1>
 
-<h1>
-    {{ text.welcome }}, {{ user }}
-</h1>
+    <div>
+        <a href="/">Home</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/subjects">Subjects</a>
+        <a href="/logout">Logout</a>
 
-<div class="dashboard-grid">
+        <a href="/set_language/en">EN</a>
+        <a href="/set_language/es">ES</a>
+        <a href="/set_language/fr">FR</a>
+    </div>
+</nav>
+
+<div class="hero">
+
+    <h2>{{ t.welcome }}, {{ username }}</h2>
 
     <div class="card">
-        <h2>Subjects</h2>
+        <h3>{{ t.subjects }}</h3>
         <p>Explore learning paths.</p>
 
         <a href="/subjects">
@@ -18,14 +35,39 @@
     </div>
 
     <div class="card">
-        <h2>AI Tutor</h2>
-        <p>Ask questions and learn faster.</p>
+        <h3>{{ t.ai_tutor }}</h3>
 
-        <a href="/learn/Programming">
-            <button>Start</button>
-        </a>
+        <input type="text" id="aiInput" placeholder="Ask AI..." />
+
+        <button onclick="askAI()">Ask</button>
+
+        <p id="aiResponse"></p>
     </div>
 
 </div>
 
-{% endblock %}
+<script>
+async function askAI() {
+
+    const message =
+        document.getElementById("aiInput").value;
+
+    const response = await fetch("/ai", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            message: message
+        })
+    });
+
+    const data = await response.json();
+
+    document.getElementById("aiResponse").innerText =
+        data.response;
+}
+</script>
+
+</body>
+</html>
