@@ -247,18 +247,38 @@ def dashboard():
 # SUBJECTS
 # =========================
 
-@app.route("/subjects")
+@app.route("/subjects", methods=["GET", "POST"])
 def subjects():
 
-    if "user" not in session:
+    if "user_id" not in session:
         return redirect("/login")
 
-    text = get_text()
+    if request.method == "POST":
+
+        subject = request.form.get("subject")
+
+        if not subject:
+            return render_template(
+                "subjects.html",
+                error="Please choose a subject"
+            )
+
+        return redirect(f"/course/{subject}")
+
+    subjects_list = [
+        "Math",
+        "Science",
+        "Programming",
+        "Spanish",
+        "Business",
+        "Cybersecurity",
+        "AI",
+        "Data Science"
+    ]
 
     return render_template(
         "subjects.html",
-        courses=COURSES,
-        text=text
+        subjects=subjects_list
     )
 
 # =========================
