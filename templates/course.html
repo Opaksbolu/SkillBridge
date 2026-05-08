@@ -13,11 +13,13 @@
 {% for lesson in lessons %}
 
 <div class="card">
-    <h2>{{ lesson }}</h2>
 
-    <a href="/learn/{{ subject }}">
-        <button>Start Lesson</button>
-    </a>
+<h2>{{ lesson }}</h2>
+
+<a href="/learn/{{ subject }}">
+    <button>Start Lesson</button>
+</a>
+
 </div>
 
 {% endfor %}

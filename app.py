@@ -1,19 +1,19 @@
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify
+from flask import Flask, render_template, request, redirect, session, jsonify
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "skillbridge_secret_key"
+app.secret_key = "skillbridge_secret"
 
 # ---------------- DATABASE ---------------- #
 
-def get_db():
+def connect_db():
     conn = sqlite3.connect("users.db")
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-    conn = get_db()
+    conn = connect_db()
 
     conn.execute("""
     CREATE TABLE IF NOT EXISTS users (
@@ -28,26 +28,31 @@ def init_db():
 
 init_db()
 
-# ---------------- LANGUAGE SYSTEM ---------------- #
+# ---------------- LANGUAGES ---------------- #
 
 translations = {
     "en": {
-        "welcome": "Welcome to SkillBridge",
+        "welcome": "Welcome",
         "subjects": "Subjects",
-        "ai_tutor": "AI Tutor",
-        "dashboard": "Dashboard"
+        "dashboard": "Dashboard",
+        "logout": "Logout",
+        "ai": "AI Tutor"
     },
+
     "es": {
-        "welcome": "Bienvenido a SkillBridge",
+        "welcome": "Bienvenido",
         "subjects": "Materias",
-        "ai_tutor": "Tutor IA",
-        "dashboard": "Panel"
+        "dashboard": "Panel",
+        "logout": "Cerrar sesión",
+        "ai": "Tutor IA"
     },
+
     "fr": {
-        "welcome": "Bienvenue sur SkillBridge",
+        "welcome": "Bienvenue",
         "subjects": "Sujets",
-        "ai_tutor": "Tuteur IA",
-        "dashboard": "Tableau de bord"
+        "dashboard": "Tableau de bord",
+        "logout": "Déconnexion",
+        "ai": "Tuteur IA"
     }
 }
 
@@ -75,13 +80,13 @@ def register():
         if not username or not password:
             return render_template(
                 "register.html",
-                error="Please fill all fields"
+                error="Fill all fields"
             )
 
         hashed_password = generate_password_hash(password)
 
         try:
-            conn = get_db()
+            conn = connect_db()
 
             conn.execute(
                 "INSERT INTO users (username, password) VALUES (?, ?)",
@@ -111,7 +116,7 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = get_db()
+        conn = connect_db()
 
         user = conn.execute(
             "SELECT * FROM users WHERE username=?",
@@ -133,13 +138,6 @@ def login():
 
     return render_template("login.html")
 
-# ---------------- LOGOUT ---------------- #
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
-
 # ---------------- DASHBOARD ---------------- #
 
 @app.route("/dashboard")
@@ -155,7 +153,7 @@ def dashboard():
 
 # ---------------- SUBJECTS ---------------- #
 
-@app.route("/subjects", methods=["GET"])
+@app.route("/subjects")
 def subjects():
 
     if "user" not in session:
@@ -174,7 +172,7 @@ def subjects():
         subjects=subjects_list
     )
 
-# ---------------- COURSE PAGE ---------------- #
+# ---------------- COURSE ---------------- #
 
 @app.route("/course/<subject>")
 def course(subject):
@@ -185,9 +183,9 @@ def course(subject):
     lessons = [
         "Introduction",
         "Core Concepts",
-        "Practice Exercises",
+        "Practice",
         "Quiz",
-        "Final Project"
+        "Project"
     ]
 
     return render_template(
@@ -196,7 +194,7 @@ def course(subject):
         lessons=lessons
     )
 
-# ---------------- LEARN PAGE ---------------- #
+# ---------------- LEARN ---------------- #
 
 @app.route("/learn/<subject>")
 def learn(subject):
@@ -209,32 +207,37 @@ def learn(subject):
         subject=subject
     )
 
-# ---------------- AI TUTOR ---------------- #
+# ---------------- AI ---------------- #
 
 @app.route("/ai", methods=["POST"])
 def ai():
 
     if "user" not in session:
-        return jsonify({"response": "Please login first."})
+        return jsonify({
+            "response": "Please login first."
+        })
 
-    user_message = request.json.get("message", "")
+    data = request.get_json()
+
+    message = data.get("message", "").lower()
 
     responses = {
-        "math": "Math helps solve real-world problems using logic and numbers.",
-        "science": "Science explains how the world works through experiments.",
-        "python": "Python is one of the best beginner programming languages.",
+        "hello": "Hello! Welcome to SkillBridge.",
+        "math": "Math improves problem solving and logic.",
+        "science": "Science helps explain how the world works.",
+        "python": "Python is beginner friendly and powerful."
     }
 
-    reply = responses.get(
-        user_message.lower(),
-        f"AI Tutor Response: {user_message}"
+    answer = responses.get(
+        message,
+        f"AI Tutor says: {message}"
     )
 
     return jsonify({
-        "response": reply
+        "response": answer
     })
 
-# ---------------- LANGUAGE SWITCH ---------------- #
+# ---------------- LANGUAGE ---------------- #
 
 @app.route("/set_language/<lang>")
 def set_language(lang):
@@ -243,6 +246,13 @@ def set_language(lang):
         session["language"] = lang
 
     return redirect(request.referrer or "/")
+
+# ---------------- LOGOUT ---------------- #
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
 
 # ---------------- RUN ---------------- #
 

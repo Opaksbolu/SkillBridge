@@ -2,61 +2,79 @@
 <html>
 <head>
     <title>Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <link rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
 <nav>
-    <h1>SkillBridge</h1>
 
-    <div>
-        <a href="/">Home</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/subjects">Subjects</a>
-        <a href="/logout">Logout</a>
+<h1>SkillBridge</h1>
 
-        <a href="/set_language/en">EN</a>
-        <a href="/set_language/es">ES</a>
-        <a href="/set_language/fr">FR</a>
-    </div>
+<div>
+    <a href="/">Home</a>
+    <a href="/dashboard">{{ t.dashboard }}</a>
+    <a href="/subjects">{{ t.subjects }}</a>
+    <a href="/logout">{{ t.logout }}</a>
+
+    <a href="/set_language/en">EN</a>
+    <a href="/set_language/es">ES</a>
+    <a href="/set_language/fr">FR</a>
+</div>
+
 </nav>
 
 <div class="hero">
 
-    <h2>{{ t.welcome }}, {{ username }}</h2>
+<h2>{{ t.welcome }}, {{ username }}</h2>
 
-    <div class="card">
-        <h3>{{ t.subjects }}</h3>
-        <p>Explore learning paths.</p>
+<div class="card">
 
-        <a href="/subjects">
-            <button>Open</button>
-        </a>
-    </div>
+<h3>{{ t.subjects }}</h3>
 
-    <div class="card">
-        <h3>{{ t.ai_tutor }}</h3>
+<p>Explore learning paths.</p>
 
-        <input type="text" id="aiInput" placeholder="Ask AI..." />
+<a href="/subjects">
+    <button>Open</button>
+</a>
 
-        <button onclick="askAI()">Ask</button>
+</div>
 
-        <p id="aiResponse"></p>
-    </div>
+<div class="card">
+
+<h3>{{ t.ai }}</h3>
+
+<input
+type="text"
+id="aiInput"
+placeholder="Ask AI anything..."
+>
+
+<button onclick="askAI()">Ask AI</button>
+
+<p id="response"></p>
+
+</div>
 
 </div>
 
 <script>
+
 async function askAI() {
 
     const message =
         document.getElementById("aiInput").value;
 
     const response = await fetch("/ai", {
+
         method: "POST",
+
         headers: {
             "Content-Type": "application/json"
         },
+
         body: JSON.stringify({
             message: message
         })
@@ -64,9 +82,10 @@ async function askAI() {
 
     const data = await response.json();
 
-    document.getElementById("aiResponse").innerText =
+    document.getElementById("response").innerText =
         data.response;
 }
+
 </script>
 
 </body>

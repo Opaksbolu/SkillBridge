@@ -6,6 +6,15 @@
 </head>
 <body>
 
+<nav>
+    <h1>SkillBridge</h1>
+
+    <div>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
 <h1>Select a Subject</h1>
 
 <div class="subjects-grid">
@@ -14,11 +23,11 @@
 
 <div class="card">
 
-    <h2>{{ subject }}</h2>
+<h2>{{ subject }}</h2>
 
-    <a href="/course/{{ subject }}">
-        <button>Open Course</button>
-    </a>
+<a href="/course/{{ subject }}">
+    <button>Open Course</button>
+</a>
 
 </div>
 
