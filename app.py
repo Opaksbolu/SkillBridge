@@ -4,7 +4,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
+import google.generativeai as genai
+from dotenv import load_dotenv
+import os
 
+
+load_dotenv()
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+model = genai.GenerativeModel("gemini-1.5-flash")
 app = Flask(__name__)
 
 def login_required(f):
@@ -257,33 +266,42 @@ def learn(subject):
 # ---------------- AI ---------------- #
 
 @app.route("/ai", methods=["POST"])
-@login_required
 def ai():
 
     if "user" not in session:
-        return jsonify({
-            "response": "Please login first."
-        })
+        return jsonify({"response": "Please login first."})
 
     data = request.get_json()
 
-    message = data.get("message", "").lower()
+    message = data.get("message", "")
+    subject = data.get("subject", "General")
+    language = session.get("language", "en")
 
-    responses = {
-        "hello": "Hello! Welcome to SkillBridge.",
-        "math": "Math improves problem solving and logic.",
-        "science": "Science helps explain how the world works.",
-        "python": "Python is beginner friendly and powerful."
-    }
+    prompt = f"""
+    You are an AI tutor for SkillBridge.
 
-    answer = responses.get(
-        message,
-        f"AI Tutor says: {message}"
-    )
+    Subject: {subject}
 
-    return jsonify({
-        "response": answer
-    })
+    User language: {language}
+
+    Explain clearly and simply.
+
+    Student question:
+    {message}
+    """
+
+    try:
+        response = model.generate_content(prompt)
+
+        return jsonify({
+            "response": response.text
+        })
+
+    except Exception as e:
+
+        return jsonify({
+            "response": f"AI temporarily unavailable. Error: {str(e)}"
+        })
 
 # ---------------- LANGUAGE ---------------- #
 
