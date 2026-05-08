@@ -13,20 +13,27 @@ def connect_db():
     return conn
 
 def init_db():
+
     conn = connect_db()
 
     conn.execute("""
+
     CREATE TABLE IF NOT EXISTS users (
+
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+
         username TEXT UNIQUE,
+
+        email TEXT UNIQUE,
+
         password TEXT
+
     )
+
     """)
 
     conn.commit()
     conn.close()
-
-init_db()
 
 # ---------------- LANGUAGES ---------------- #
 
@@ -75,22 +82,32 @@ def register():
     if request.method == "POST":
 
         username = request.form.get("username")
+        email = request.form.get("email")
         password = request.form.get("password")
 
-        if not username or not password:
+        if len(password) < 8:
             return render_template(
                 "register.html",
-                error="Fill all fields"
+                error="Password must be at least 8 characters"
             )
 
         hashed_password = generate_password_hash(password)
 
         try:
+
             conn = connect_db()
 
             conn.execute(
-                "INSERT INTO users (username, password) VALUES (?, ?)",
-                (username, hashed_password)
+                """
+                INSERT INTO users
+                (username, email, password)
+                VALUES (?, ?, ?)
+                """,
+                (
+                    username,
+                    email,
+                    hashed_password
+                )
             )
 
             conn.commit()
@@ -99,9 +116,10 @@ def register():
             return redirect("/login")
 
         except:
+
             return render_template(
                 "register.html",
-                error="User already exists"
+                error="Username or email already exists"
             )
 
     return render_template("register.html")
@@ -113,27 +131,36 @@ def login():
 
     if request.method == "POST":
 
-        username = request.form.get("username")
+        login_input = request.form.get("login")
         password = request.form.get("password")
 
         conn = connect_db()
 
         user = conn.execute(
-            "SELECT * FROM users WHERE username=?",
-            (username,)
+            """
+            SELECT * FROM users
+            WHERE username=? OR email=?
+            """,
+            (
+                login_input,
+                login_input
+            )
         ).fetchone()
 
         conn.close()
 
-        if user and check_password_hash(user["password"], password):
+        if user and check_password_hash(
+            user["password"],
+            password
+        ):
 
-            session["user"] = username
+            session["user"] = user["username"]
 
             return redirect("/dashboard")
 
         return render_template(
             "login.html",
-            error="Invalid login"
+            error="Invalid credentials"
         )
 
     return render_template("login.html")

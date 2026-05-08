@@ -1,37 +1,123 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+<head>
 
-{% block content %}
+    <title>Register</title>
 
-<div class="card">
+    <link rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}">
 
-    <h1>Register</h1>
+</head>
 
-    {% if error %}
-        <p>{{ error }}</p>
-    {% endif %}
+<body>
 
-    <form method="POST">
+<div class="auth-container">
 
-        <input
-            type="text"
-            name="username"
-            placeholder="Username"
-            required
-        >
+<div class="auth-card">
 
-        <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-        >
+<h1>Create Account</h1>
 
-        <button type="submit">
-            Create Account
-        </button>
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
 
-    </form>
+<form method="POST">
+
+<input
+type="text"
+name="username"
+placeholder="Username"
+required
+>
+
+<input
+type="email"
+name="email"
+placeholder="Email Address"
+required
+>
+
+<input
+type="password"
+name="password"
+id="password"
+placeholder="Strong Password"
+required
+onkeyup="checkStrength()"
+>
+
+<div class="strength-container">
+    <div id="strength-bar"></div>
+</div>
+
+<p id="strength-text"></p>
+
+<button type="submit">
+Create Account
+</button>
+
+</form>
+
+<p>
+Already have an account?
+<a href="/login">Login</a>
+</p>
 
 </div>
 
-{% endblock %}
+</div>
+
+<script>
+
+function checkStrength() {
+
+    const password =
+        document.getElementById("password").value;
+
+    const bar =
+        document.getElementById("strength-bar");
+
+    const text =
+        document.getElementById("strength-text");
+
+    let strength = 0;
+
+    if(password.length >= 8) strength++;
+    if(/[A-Z]/.test(password)) strength++;
+    if(/[0-9]/.test(password)) strength++;
+    if(/[^A-Za-z0-9]/.test(password)) strength++;
+
+    if(strength === 1){
+        bar.style.width = "25%";
+        bar.style.background = "red";
+        text.innerText = "Weak";
+    }
+
+    else if(strength === 2){
+        bar.style.width = "50%";
+        bar.style.background = "orange";
+        text.innerText = "Medium";
+    }
+
+    else if(strength === 3){
+        bar.style.width = "75%";
+        bar.style.background = "yellow";
+        text.innerText = "Strong";
+    }
+
+    else if(strength === 4){
+        bar.style.width = "100%";
+        bar.style.background = "lime";
+        text.innerText = "Very Strong";
+    }
+
+    else{
+        bar.style.width = "0%";
+        text.innerText = "";
+    }
+}
+
+</script>
+
+</body>
+</html>
