@@ -180,20 +180,22 @@ def register():
 
     if request.method == "POST":
 
-        username = request.form.get("username")
-        email = request.form.get("email")
-        password = request.form.get("password")
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "").strip()
 
+        # validation
         if not username or not email or not password:
             return render_template(
                 "register.html",
-                error="All fields required"
+                error="All fields are required"
             )
 
+        # strong password check
         if not strong_password(password):
             return render_template(
                 "register.html",
-                error="Password must contain uppercase, lowercase, number, and 8+ characters"
+                error="Password must contain uppercase, lowercase, number, and be 8+ characters"
             )
 
         hashed_password = generate_password_hash(password)
@@ -211,7 +213,7 @@ def register():
 
             return redirect("/login")
 
-        except Exception as e:
+        except sqlite3.IntegrityError:
             return render_template(
                 "register.html",
                 error="Username or email already exists"
@@ -229,8 +231,14 @@ def login():
 
     if request.method == "POST":
 
-        identifier = request.form.get("identifier")
-        password = request.form.get("password")
+        identifier = request.form.get("identifier", "").strip()
+        password = request.form.get("password", "").strip()
+
+        if not identifier or not password:
+            return render_template(
+                "login.html",
+                error="Please fill all fields"
+            )
 
         conn = get_db()
 
@@ -242,15 +250,19 @@ def login():
 
         conn.close()
 
-        if user and check_password_hash(user["password"], password):
+        if user:
 
-            session["user"] = user["username"]
+            stored_password = user["password"]
 
-            return redirect("/dashboard")
+            if check_password_hash(stored_password, password):
+
+                session["user"] = user["username"]
+
+                return redirect("/dashboard")
 
         return render_template(
             "login.html",
-            error="Invalid login credentials"
+            error="Invalid username/email or password"
         )
 
     return render_template("login.html")
