@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkillBridge</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -16,27 +18,27 @@
 
     <div class="nav-links">
 
-        <a href="/">Home</a>
+        <a href="/">{{ text.home }}</a>
 
         {% if session.get("user") %}
             <a href="/dashboard">{{ text.dashboard }}</a>
             <a href="/subjects">{{ text.subjects }}</a>
             <a href="/logout">{{ text.logout }}</a>
+        {% else %}
+            <a href="/login">{{ text.login }}</a>
+            <a href="/register">{{ text.register }}</a>
         {% endif %}
 
-        <a href="/set_language/English">EN</a>
-        <a href="/set_language/Spanish">ES</a>
-        <a href="/set_language/French">FR</a>
+        <a href="/set_language/en">EN</a>
+        <a href="/set_language/es">ES</a>
+        <a href="/set_language/fr">FR</a>
 
     </div>
 
 </nav>
 
-<div class="page-content">
-
-{% block content %}
-{% endblock %}
-
+<div class="container">
+    {% block content %}{% endblock %}
 </div>
 
 </body>
