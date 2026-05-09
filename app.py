@@ -1,101 +1,179 @@
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    session,
+    jsonify,
+    url_for
+)
+
 import sqlite3
-from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash
-import google.generativeai as genai
-from dotenv import load_dotenv
 import os
+import re
 
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
 
-load_dotenv()
+# =========================
+# APP CONFIG
+# =========================
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
-model = genai.GenerativeModel("gemini-1.5-flash")
 app = Flask(__name__)
+app.secret_key = "skillbridge_secret_key"
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if "user_id" not in session:
-            return redirect("/login")
-        return f(*args, **kwargs)
-    return decorated_function
+DATABASE = "users.db"
 
-app.secret_key = "skillbridge_secret"
+# =========================
+# DATABASE
+# =========================
 
-# ---------------- DATABASE ---------------- #
-
-def connect_db():
-    conn = sqlite3.connect("users.db")
+def get_db():
+    conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
 
-def init_db():
 
-    conn = connect_db()
+def init_db():
+    conn = get_db()
 
     conn.execute("""
-
     CREATE TABLE IF NOT EXISTS users (
-
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-
         username TEXT UNIQUE,
-
         email TEXT UNIQUE,
-
         password TEXT
-
     )
-
     """)
 
     conn.commit()
     conn.close()
 
-# ---------------- LANGUAGES ---------------- #
+
+init_db()
+
+# =========================
+# LANGUAGE SYSTEM
+# =========================
 
 translations = {
     "en": {
-        "welcome": "Welcome",
-        "subjects": "Subjects",
+        "home": "Home",
         "dashboard": "Dashboard",
+        "subjects": "Subjects",
         "logout": "Logout",
-        "ai": "AI Tutor"
+        "login": "Login",
+        "register": "Register",
+        "welcome": "Welcome to SkillBridge",
+        "hero": "Learn skills with AI-powered tutoring.",
+        "ai_tutor": "AI Tutor",
+        "start_learning": "Start Learning",
     },
 
     "es": {
-        "welcome": "Bienvenido",
-        "subjects": "Materias",
+        "home": "Inicio",
         "dashboard": "Panel",
+        "subjects": "Materias",
         "logout": "Cerrar sesión",
-        "ai": "Tutor IA"
+        "login": "Iniciar sesión",
+        "register": "Registrarse",
+        "welcome": "Bienvenido a SkillBridge",
+        "hero": "Aprende habilidades con tutoría impulsada por IA.",
+        "ai_tutor": "Tutor IA",
+        "start_learning": "Comenzar",
     },
 
     "fr": {
-        "welcome": "Bienvenue",
-        "subjects": "Sujets",
+        "home": "Accueil",
         "dashboard": "Tableau de bord",
+        "subjects": "Sujets",
         "logout": "Déconnexion",
-        "ai": "Tuteur IA"
+        "login": "Connexion",
+        "register": "S'inscrire",
+        "welcome": "Bienvenue sur SkillBridge",
+        "hero": "Apprenez avec un tutorat alimenté par IA.",
+        "ai_tutor": "Tuteur IA",
+        "start_learning": "Commencer",
     }
 }
 
+
 @app.context_processor
 def inject_language():
-    lang = session.get("language", "en")
-    return dict(t=translations[lang])
+    language = session.get("language", "en")
 
-# ---------------- HOME ---------------- #
+    return {
+        "text": translations.get(language, translations["en"]),
+        "current_language": language
+    }
+
+# =========================
+# COURSES
+# =========================
+
+courses = {
+    "Math": [
+        "Algebra Basics",
+        "Geometry Fundamentals",
+        "Linear Equations",
+        "Probability Intro"
+    ],
+
+    "Science": [
+        "Biology Basics",
+        "Physics Motion",
+        "Chemistry Reactions",
+        "Earth Science"
+    ],
+
+    "Programming": [
+        "Python Basics",
+        "Flask Development",
+        "APIs and JSON",
+        "Web Development"
+    ],
+
+    "Business": [
+        "Entrepreneurship",
+        "Marketing Basics",
+        "Finance Intro",
+        "Startup Strategy"
+    ]
+}
+
+# =========================
+# PASSWORD VALIDATION
+# =========================
+
+def strong_password(password):
+    if len(password) < 8:
+        return False
+
+    if not re.search(r"[A-Z]", password):
+        return False
+
+    if not re.search(r"[a-z]", password):
+        return False
+
+    if not re.search(r"\d", password):
+        return False
+
+    return True
+
+# =========================
+# ROUTES
+# =========================
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# ---------------- REGISTER ---------------- #
+
+# =========================
+# REGISTER
+# =========================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -106,42 +184,34 @@ def register():
         email = request.form.get("email")
         password = request.form.get("password")
 
-        if len(password) < 8:
+        if not username or not email or not password:
             return render_template(
                 "register.html",
-                error="Password must be at least 8 characters"
+                error="All fields required"
+            )
+
+        if not strong_password(password):
+            return render_template(
+                "register.html",
+                error="Password must contain uppercase, lowercase, number, and 8+ characters"
             )
 
         hashed_password = generate_password_hash(password)
-        db.execute(
-    "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-    (username, email, hashed_password)
-)
 
         try:
+            conn = get_db()
 
-            conn = connect_db()
-
-            conn.execute(
-                """
-                INSERT INTO users
-                (username, email, password)
-                VALUES (?, ?, ?)
-                """,
-                (
-                    username,
-                    email,
-                    hashed_password
-                )
-            )
+            conn.execute("""
+            INSERT INTO users (username, email, password)
+            VALUES (?, ?, ?)
+            """, (username, email, hashed_password))
 
             conn.commit()
             conn.close()
 
             return redirect("/login")
 
-        except:
-
+        except Exception as e:
             return render_template(
                 "register.html",
                 error="Username or email already exists"
@@ -149,35 +219,30 @@ def register():
 
     return render_template("register.html")
 
-# ---------------- LOGIN ---------------- #
+
+# =========================
+# LOGIN
+# =========================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
 
-        login_input = request.form.get("login")
+        identifier = request.form.get("identifier")
         password = request.form.get("password")
 
-        conn = connect_db()
+        conn = get_db()
 
-        user = conn.execute(
-            """
-            SELECT * FROM users
-            WHERE username=? OR email=?
-            """,
-            (
-                login_input,
-                login_input
-            )
-        ).fetchone()
+        user = conn.execute("""
+        SELECT * FROM users
+        WHERE username = ?
+        OR email = ?
+        """, (identifier, identifier)).fetchone()
 
         conn.close()
 
-        if user and check_password_hash(
-            user["password"],
-            password
-        ):
+        if user and check_password_hash(user["password"], password):
 
             session["user"] = user["username"]
 
@@ -185,15 +250,17 @@ def login():
 
         return render_template(
             "login.html",
-            error="Invalid credentials"
+            error="Invalid login credentials"
         )
 
     return render_template("login.html")
 
-# ---------------- DASHBOARD ---------------- #
+
+# =========================
+# DASHBOARD
+# =========================
 
 @app.route("/dashboard")
-@login_required
 def dashboard():
 
     if "user" not in session:
@@ -204,44 +271,40 @@ def dashboard():
         username=session["user"]
     )
 
-# ---------------- SUBJECTS ---------------- #
 
-@app.route("/subjects")
-@login_required
+# =========================
+# SUBJECTS
+# =========================
+
+@app.route("/subjects", methods=["GET", "POST"])
 def subjects():
 
     if "user" not in session:
         return redirect("/login")
 
-    subjects_list = [
-        "Math",
-        "Science",
-        "Programming",
-        "Business",
-        "Languages"
-    ]
+    if request.method == "POST":
+
+        subject = request.form.get("subject")
+
+        return redirect(f"/course/{subject}")
 
     return render_template(
         "subjects.html",
-        subjects=subjects_list
+        subjects=courses.keys()
     )
 
-# ---------------- COURSE ---------------- #
+
+# =========================
+# COURSE PAGE
+# =========================
 
 @app.route("/course/<subject>")
-@login_required
 def course(subject):
 
     if "user" not in session:
         return redirect("/login")
 
-    lessons = [
-        "Introduction",
-        "Core Concepts",
-        "Practice",
-        "Quiz",
-        "Project"
-    ]
+    lessons = courses.get(subject, [])
 
     return render_template(
         "course.html",
@@ -249,78 +312,91 @@ def course(subject):
         lessons=lessons
     )
 
-# ---------------- LEARN ---------------- #
 
-@app.route("/learn/<subject>")
-@login_required
-def learn(subject):
+# =========================
+# LEARN PAGE
+# =========================
+
+@app.route("/learn/<subject>/<lesson>")
+def learn(subject, lesson):
 
     if "user" not in session:
         return redirect("/login")
 
     return render_template(
         "learn.html",
-        subject=subject
+        subject=subject,
+        lesson=lesson
     )
 
-# ---------------- AI ---------------- #
+
+# =========================
+# AI TUTOR
+# =========================
 
 @app.route("/ai", methods=["POST"])
 def ai():
-
-    if "user" not in session:
-        return jsonify({"response": "Please login first."})
 
     data = request.get_json()
 
     message = data.get("message", "")
     subject = data.get("subject", "General")
+
     language = session.get("language", "en")
 
-    prompt = f"""
-    You are an AI tutor for SkillBridge.
+    # SIMPLE FALLBACK AI
+    responses = {
+        "hello": "Hello! How can I help you learn today?",
+        "math": "Math helps build logical thinking and problem solving.",
+        "science": "Science helps explain how the world works.",
+        "python": "Python is one of the best beginner programming languages."
+    }
 
-    Subject: {subject}
+    answer = responses.get(
+        message.lower(),
+        f"{subject} AI Tutor: I understand your question about '{message}'."
+    )
 
-    User language: {language}
+    # LANGUAGE RESPONSE MOCK
+    if language == "es":
+        answer = "Tutor IA: " + answer
 
-    Explain clearly and simply.
+    elif language == "fr":
+        answer = "Tuteur IA: " + answer
 
-    Student question:
-    {message}
-    """
+    return jsonify({
+        "response": answer
+    })
 
-    try:
-        response = model.generate_content(prompt)
 
-        return jsonify({
-            "response": response.text
-        })
+# =========================
+# LANGUAGE TOGGLE
+# =========================
 
-    except Exception as e:
+@app.route("/set_language/<language>")
+def set_language(language):
 
-        return jsonify({
-            "response": f"AI temporarily unavailable. Error: {str(e)}"
-        })
-
-# ---------------- LANGUAGE ---------------- #
-
-@app.route("/set_language/<lang>")
-def set_language(lang):
-
-    if lang in translations:
-        session["language"] = lang
+    if language in translations:
+        session["language"] = language
 
     return redirect(request.referrer or "/")
 
-# ---------------- LOGOUT ---------------- #
+
+# =========================
+# LOGOUT
+# =========================
 
 @app.route("/logout")
 def logout():
+
     session.clear()
+
     return redirect("/")
 
-# ---------------- RUN ---------------- #
+
+# =========================
+# MAIN
+# =========================
 
 if __name__ == "__main__":
     app.run(debug=True)
