@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="page-header">
+    <h1>AI Tutor</h1>
+    <p>Ask questions and get guided help for your learning journey.</p>
+</section>
+
+<div class="card">
+
+    <form method="POST">
+
+        <label for="question">Ask your question</label>
+
+        <textarea
+            id="question"
+            name="question"
+            placeholder="Example: Explain algebra like I am in 6th grade..."
+            required
+        ></textarea>
+
+        <button type="submit">Ask AI Tutor</button>
+
+    </form>
+
+</div>
+
+{% if response %}
+
+<div class="card response-card">
+
+    <h2>Response</h2>
+
+    <p>{{ response }}</p>
+
+</div>
+
+{% endif %}
+
+{% endblock %}
